@@ -1,0 +1,256 @@
+---
+globs: *.py
+description: Code quality and style enforcement rules for Python
+---
+
+# Python Code Quality & Style Rules
+
+## 🎯 STYLE ENFORCEMENT - MANDATORY
+
+### **PEP 8 Compliance - ZERO TOLERANCE**
+
+- **ALWAYS** use 4 spaces for indentation (never tabs)
+- **ALWAYS** limit lines to 88 characters (Black formatter standard)
+- **ALWAYS** use snake_case for variables and functions
+- **ALWAYS** use PascalCase for classes
+- **ALWAYS** use UPPER_CASE for constants
+- **NEVER** use trailing commas in single-line structures
+- **NEVER** use spaces around `=` in function parameters
+
+### **Import Organization - STRICT ORDER**
+
+```python
+# 1. Standard library imports (alphabetical)
+import json
+import os
+import sys
+from typing import Any, Dict, List, Optional
+
+# 2. Third-party imports (alphabetical)
+import pandas as pd
+import requests
+from django.conf import settings
+
+# 3. Local application imports (alphabetical)
+from .models import User
+from .utils import format_data
+from ..core.exceptions import ValidationError
+```
+
+## 🚨 CRITICAL QUALITY GATES
+
+### **MANDATORY: Function Design**
+
+- **ALWAYS** keep functions under 20 lines
+- **ALWAYS** use single responsibility principle
+- **ALWAYS** return early to reduce nesting
+- **NEVER** use more than 4 parameters (use dataclasses for complex data)
+- **NEVER** use global variables inside functions
+
+### **MANDATORY: Class Design**
+
+- **ALWAYS** use `__slots__` for classes with many instances
+- **ALWAYS** implement `__repr__` and `__str__` methods
+- **ALWAYS** use properties for computed attributes
+- **NEVER** use inheritance for code reuse (prefer composition)
+- **NEVER** use more than 3 levels of inheritance
+
+### **MANDATORY: Error Handling**
+
+```python
+# ✅ CORRECT - Specific exception handling
+try:
+    result = risky_operation()
+except SpecificError as e:
+    logger.error(f"Operation failed: {e}")
+    return None
+except AnotherError as e:
+    logger.warning(f"Non-critical failure: {e}")
+    return default_value
+
+# ❌ WRONG - Bare except
+try:
+    result = risky_operation()
+except:  # NEVER DO THIS
+    pass
+```
+
+## 🔧 CODE PATTERNS - ENFORCED
+
+### **String Handling**
+
+```python
+# ✅ CORRECT - f-strings for formatting
+name = "John"
+message = f"Hello, {name}!"
+
+# ✅ CORRECT - join() for concatenation
+words = ["hello", "world", "python"]
+sentence = " ".join(words)
+
+# ❌ WRONG - String concatenation in loops
+result = ""
+for word in words:
+    result += word + " "  # Inefficient!
+```
+
+### **List and Dictionary Operations**
+
+```python
+# ✅ CORRECT - List comprehensions
+squares = [x**2 for x in range(10) if x % 2 == 0]
+
+# ✅ CORRECT - Dictionary comprehensions
+user_ages = {user.name: user.age for user in users if user.age > 18}
+
+# ✅ CORRECT - Generator expressions for large datasets
+large_sum = sum(x**2 for x in range(1000000))
+
+# ❌ WRONG - Unnecessary list creation
+large_sum = sum([x**2 for x in range(1000000)])  # Creates unnecessary list
+```
+
+### **Context Managers - MANDATORY**
+
+```python
+# ✅ CORRECT - Always use context managers
+with open('file.txt', 'r') as f:
+    content = f.read()
+
+# ✅ CORRECT - Custom context managers
+from contextlib import contextmanager
+
+@contextmanager
+def database_connection():
+    conn = get_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# ❌ WRONG - Manual resource management
+f = open('file.txt', 'r')
+content = f.read()
+f.close()  # May not execute if exception occurs
+```
+
+## 🚫 ABSOLUTE PROHIBITIONS
+
+### **NEVER USE THESE PATTERNS:**
+
+- ❌ `eval()` or `exec()` with any user input
+- ❌ `globals()` or `locals()` for variable access
+- ❌ `import *` in any module
+- ❌ Mutable default arguments: `def func(items=[]):`
+- ❌ Bare `except:` clauses
+- ❌ `==` for None comparison (use `is None`)
+- ❌ `print()` for logging (use proper logging)
+- ❌ Global variables for state management
+
+### **ANTI-PATTERNS TO AVOID:**
+
+```python
+# ❌ WRONG - Mutable default argument
+def add_item(item, items=[]):
+    items.append(item)
+    return items
+
+# ✅ CORRECT - Use None as default
+def add_item(item, items=None):
+    if items is None:
+        items = []
+    items.append(item)
+    return items
+
+# ❌ WRONG - String concatenation in loop
+result = ""
+for item in items:
+    result += str(item)
+
+# ✅ CORRECT - Use join()
+result = "".join(str(item) for item in items)
+```
+
+## 📊 PERFORMANCE REQUIREMENTS
+
+### **Memory Efficiency**
+
+- Use generators for large datasets
+- Implement `__slots__` for classes with many instances
+- Use `collections.namedtuple` for simple data structures
+- Prefer `pathlib.Path` over `os.path`
+
+### **CPU Efficiency**
+
+- Use list comprehensions over explicit loops
+- Prefer `enumerate()` over manual indexing
+- Use `collections.defaultdict` for counting
+- Cache expensive computations with `functools.lru_cache`
+
+### **I/O Efficiency**
+
+- Use async/await for I/O-bound operations
+- Batch database operations
+- Use connection pooling
+- Implement proper caching strategies
+
+## 🧪 TESTING REQUIREMENTS
+
+### **Test Structure**
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+
+class TestUserService:
+    """Test suite for UserService class."""
+
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.user_service = UserService()
+        self.mock_user = Mock()
+
+    def test_create_user_success(self):
+        """Test successful user creation."""
+        # Arrange
+        user_data = {"name": "John", "email": "john@example.com"}
+
+        # Act
+        result = self.user_service.create_user(user_data)
+
+        # Assert
+        assert result.name == "John"
+        assert result.email == "john@example.com"
+
+    def test_create_user_invalid_email(self):
+        """Test user creation with invalid email."""
+        # Arrange
+        user_data = {"name": "John", "email": "invalid-email"}
+
+        # Act & Assert
+        with pytest.raises(ValidationError):
+            self.user_service.create_user(user_data)
+```
+
+### **Test Coverage Requirements**
+
+- **MANDATORY**: >90% code coverage
+- **MANDATORY**: Test all public methods
+- **MANDATORY**: Test both success and failure scenarios
+- **MANDATORY**: Mock all external dependencies
+- **MANDATORY**: Test edge cases and boundary conditions
+
+## 🔍 CODE REVIEW CHECKLIST
+
+### **Before Submitting Code:**
+
+- [ ] All functions have type hints
+- [ ] All public functions have docstrings
+- [ ] Code follows PEP 8 (run `black` and `flake8`)
+- [ ] No bare `except:` clauses
+- [ ] All imports are organized correctly
+- [ ] No hardcoded secrets or credentials
+- [ ] Proper error handling for all external calls
+- [ ] Unit tests cover all new functionality
+- [ ] No performance anti-patterns
+- [ ] Memory usage is optimized for large datasets

@@ -1,0 +1,158 @@
+---
+alwaysApply: true
+description: Core Python development rules and best practices
+---
+
+# Python Core Development Rules
+
+## 🚨 CRITICAL REQUIREMENTS - NEVER VIOLATE
+
+### **MANDATORY: Type Safety & Error Handling**
+
+- **ALWAYS** use type hints for function parameters, return types, and class attributes
+- **ALWAYS** handle exceptions with specific exception types, never bare `except:`
+- **ALWAYS** use `typing.Optional` for nullable values, never `None` without explicit typing
+- **NEVER** use `Any` type unless absolutely necessary - prefer specific types
+- **NEVER** ignore exceptions silently - always log or handle appropriately
+
+### **MANDATORY: Code Structure**
+
+- **ALWAYS** follow PEP 8 style guidelines strictly
+- **ALWAYS** use meaningful variable and function names (minimum 3 characters)
+- **ALWAYS** write docstrings for all public functions, classes, and modules
+- **NEVER** use single-letter variable names except for loop counters (i, j, k)
+- **NEVER** exceed 88 characters per line (use Black formatter standard)
+
+### **MANDATORY: Import Organization**
+
+```python
+# Standard library imports
+import os
+import sys
+from typing import List, Dict, Optional
+
+# Third-party imports
+import requests
+import pandas as pd
+
+# Local imports
+from .models import User
+from .utils import validate_input
+```
+
+## 🎯 OPTIMIZATION TECHNIQUES
+
+### **Performance Critical Patterns**
+
+- Use list comprehensions over explicit loops when appropriate
+- Prefer `enumerate()` over manual indexing
+- Use `collections.defaultdict` for counting operations
+- Cache expensive computations with `functools.lru_cache`
+
+### **Memory Management**
+
+- Use generators for large datasets instead of lists
+- Implement `__slots__` for classes with many instances
+- Use context managers (`with` statements) for resource management
+- Prefer `pathlib.Path` over `os.path` for file operations
+
+### **Modern Python Features (3.8+)**
+
+- Use f-strings for string formatting
+- Leverage dataclasses for simple data containers
+- Use walrus operator (`:=`) judiciously for assignment expressions
+- Prefer `typing.Union` over `typing.Optional` for explicit union types
+
+## 🚫 ABSOLUTE PROHIBITIONS
+
+### **NEVER DO THESE:**
+
+- ❌ Use mutable default arguments: `def func(items=[]):`
+- ❌ Use `==` to compare with `None` (use `is None` instead)
+- ❌ Use `eval()` or `exec()` with user input
+- ❌ Use bare `except:` clauses
+- ❌ Use `import *` in production code
+- ❌ Use global variables for state management
+- ❌ Use `print()` for logging (use proper logging)
+- ❌ Use string concatenation in loops (use `join()`)
+
+### **SECURITY VIOLATIONS:**
+
+- ❌ Never use `pickle` with untrusted data
+- ❌ Never use `subprocess` with shell=True and user input
+- ❌ Never store secrets in code (use environment variables)
+- ❌ Never use weak random number generators for security
+
+## 📋 CODE QUALITY CHECKLIST
+
+### **Before Every Commit:**
+
+- [ ] All functions have type hints
+- [ ] All public functions have docstrings
+- [ ] No bare `except:` clauses
+- [ ] All imports are organized correctly
+- [ ] Code follows PEP 8 (run `black` and `flake8`)
+- [ ] No hardcoded secrets or credentials
+- [ ] Proper error handling for all external calls
+
+### **Function Design Pattern:**
+
+```python
+def process_user_data(
+    user_id: int,
+    data: Dict[str, Any],
+    validate: bool = True
+) -> Optional[ProcessedData]:
+    """
+    Process user data with optional validation.
+
+    Args:
+        user_id: Unique identifier for the user
+        data: Raw user data dictionary
+        validate: Whether to validate data before processing
+
+    Returns:
+        ProcessedData object if successful, None if validation fails
+
+    Raises:
+        ValueError: If user_id is invalid
+        DataValidationError: If data validation fails
+    """
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ValueError(f"Invalid user_id: {user_id}")
+
+    try:
+        if validate:
+            validated_data = validate_user_data(data)
+        else:
+            validated_data = data
+
+        return ProcessedData.from_dict(validated_data)
+    except ValidationError as e:
+        logger.error(f"Data validation failed: {e}")
+        return None
+```
+
+## 🔧 DEVELOPMENT WORKFLOW
+
+### **File Organization:**
+
+- Keep related functionality in the same module
+- Use `__init__.py` files to control package imports
+- Separate configuration from business logic
+- Use dependency injection for testability
+
+### **Error Handling Strategy:**
+
+1. **Fail Fast**: Validate inputs at function boundaries
+2. **Specific Exceptions**: Create custom exception classes for business logic
+3. **Graceful Degradation**: Handle external service failures gracefully
+4. **Logging**: Log all errors with appropriate levels and context
+
+### **Testing Requirements:**
+
+- Write unit tests for all public functions
+- Use pytest fixtures for test setup
+- Mock external dependencies
+- Aim for >90% code coverage
+- Test both success and failure scenarios

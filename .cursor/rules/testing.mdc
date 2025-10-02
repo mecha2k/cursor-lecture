@@ -1,0 +1,456 @@
+---
+globs: test_*.py,*_test.py,conftest.py
+description: Testing and documentation rules for Python development
+---
+
+# Python Testing & Documentation Rules
+
+## 🧪 CRITICAL TESTING REQUIREMENTS
+
+### **TEST COVERAGE - MANDATORY**
+
+- **ALWAYS** achieve >90% code coverage
+- **ALWAYS** test all public functions and methods
+- **ALWAYS** test both success and failure scenarios
+- **ALWAYS** test edge cases and boundary conditions
+- **NEVER** commit code without corresponding tests
+
+### **TEST STRUCTURE - MANDATORY**
+
+- **ALWAYS** use pytest as the testing framework
+- **ALWAYS** organize tests in classes for related functionality
+- **ALWAYS** use descriptive test method names
+- **ALWAYS** follow AAA pattern (Arrange, Act, Assert)
+- **NEVER** write tests that depend on external services
+
+### **MOCKING - MANDATORY**
+
+- **ALWAYS** mock external dependencies (APIs, databases, file system)
+- **ALWAYS** use dependency injection for testability
+- **ALWAYS** verify mock calls and arguments
+- **NEVER** make real network calls in tests
+- **NEVER** use real database connections in unit tests
+
+## 📝 DOCUMENTATION REQUIREMENTS
+
+### **DOCSTRINGS - MANDATORY**
+
+- **ALWAYS** write docstrings for all public functions, classes, and modules
+- **ALWAYS** follow Google-style docstring format
+- **ALWAYS** include parameter types, return types, and exceptions
+- **ALWAYS** provide usage examples for complex functions
+- **NEVER** leave public functions undocumented
+
+### **CODE COMMENTS - MANDATORY**
+
+- **ALWAYS** explain complex business logic
+- **ALWAYS** document non-obvious performance optimizations
+- **ALWAYS** explain why, not what
+- **NEVER** comment obvious code
+- **NEVER** leave TODO comments in production code
+
+## 🧪 TESTING PATTERNS - ENFORCED
+
+### **Unit Test Structure**
+
+```python
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+from typing import List, Dict, Any
+import tempfile
+import os
+
+class TestUserService:
+    """Test suite for UserService class."""
+
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.user_service = UserService()
+        self.mock_user = Mock()
+        self.mock_user.id = 1
+        self.mock_user.name = "John Doe"
+        self.mock_user.email = "john@example.com"
+
+    def test_create_user_success(self):
+        """Test successful user creation with valid data."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "age": 30
+        }
+        expected_user = User(id=1, **user_data)
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.create.return_value = expected_user
+
+            # Act
+            result = self.user_service.create_user(user_data)
+
+            # Assert
+            assert result == expected_user
+            mock_repo.return_value.create.assert_called_once_with(user_data)
+
+    def test_create_user_invalid_email(self):
+        """Test user creation fails with invalid email format."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "invalid-email-format",
+            "age": 30
+        }
+
+        # Act & Assert
+        with pytest.raises(ValidationError, match="Invalid email format"):
+            self.user_service.create_user(user_data)
+
+    def test_create_user_duplicate_email(self):
+        """Test user creation fails when email already exists."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "existing@example.com",
+            "age": 30
+        }
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_email.return_value = self.mock_user
+
+            # Act & Assert
+            with pytest.raises(DuplicateEmailError):
+                self.user_service.create_user(user_data)
+
+    def test_get_user_by_id_success(self):
+        """Test successful user retrieval by ID."""
+        # Arrange
+        user_id = 1
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_id.return_value = self.mock_user
+
+            # Act
+            result = self.user_service.get_user_by_id(user_id)
+
+            # Assert
+            assert result == self.mock_user
+            mock_repo.return_value.find_by_id.assert_called_once_with(user_id)
+
+    def test_get_user_by_id_not_found(self):
+        """Test user retrieval returns None when user doesn't exist."""
+        # Arrange
+        user_id = 999
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_id.return_value = None
+
+            # Act
+            result = self.user_service.get_user_by_id(user_id)
+
+            # Assert
+            assert result is None
+```
+
+### **Integration Test Structure**
+
+```python
+import pytest
+import asyncio
+from httpx import AsyncClient
+from app.main import app
+from app.database import get_test_db
+
+class TestUserAPI:
+    """Integration tests for User API endpoints."""
+
+    @pytest.fixture
+    async def client(self):
+        """Create test client with test database."""
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            yield ac
+
+    @pytest.fixture
+    async def test_user(self, client):
+        """Create a test user for API tests."""
+        user_data = {
+            "name": "Test User",
+            "email": "test@example.com",
+            "age": 25
+        }
+        response = await client.post("/users", json=user_data)
+        return response.json()
+
+    async def test_create_user_endpoint(self, client):
+        """Test POST /users endpoint."""
+        # Arrange
+        user_data = {
+            "name": "New User",
+            "email": "newuser@example.com",
+            "age": 30
+        }
+
+        # Act
+        response = await client.post("/users", json=user_data)
+
+        # Assert
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == user_data["name"]
+        assert data["email"] == user_data["email"]
+        assert "id" in data
+
+    async def test_get_user_endpoint(self, client, test_user):
+        """Test GET /users/{user_id} endpoint."""
+        # Act
+        response = await client.get(f"/users/{test_user['id']}")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == test_user["id"]
+        assert data["name"] == test_user["name"]
+
+    async def test_get_user_not_found(self, client):
+        """Test GET /users/{user_id} returns 404 for non-existent user."""
+        # Act
+        response = await client.get("/users/999")
+
+        # Assert
+        assert response.status_code == 404
+```
+
+### **Fixture Management**
+
+```python
+import pytest
+from typing import Generator, AsyncGenerator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base, get_db
+from app.models import User
+
+@pytest.fixture(scope="session")
+def test_engine():
+    """Create test database engine."""
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    return engine
+
+@pytest.fixture
+def test_db(test_engine):
+    """Create test database session."""
+    TestingSessionLocal = sessionmaker(bind=test_engine)
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@pytest.fixture
+def sample_user(test_db) -> User:
+    """Create a sample user for testing."""
+    user = User(
+        name="Test User",
+        email="test@example.com",
+        age=25
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+    return user
+
+@pytest.fixture
+def multiple_users(test_db) -> List[User]:
+    """Create multiple users for testing."""
+    users = [
+        User(name=f"User {i}", email=f"user{i}@example.com", age=20+i)
+        for i in range(5)
+    ]
+    test_db.add_all(users)
+    test_db.commit()
+    return users
+```
+
+## 📚 DOCUMENTATION PATTERNS
+
+### **Function Documentation**
+
+```python
+def calculate_compound_interest(
+    principal: float,
+    rate: float,
+    time: int,
+    compounding_frequency: int = 12
+) -> float:
+    """
+    Calculate compound interest for an investment.
+
+    This function calculates the compound interest using the formula:
+    A = P(1 + r/n)^(nt)
+    where:
+    - A = final amount
+    - P = principal amount
+    - r = annual interest rate
+    - n = number of times interest is compounded per year
+    - t = time in years
+
+    Args:
+        principal: The initial amount of money invested
+        rate: Annual interest rate as a decimal (e.g., 0.05 for 5%)
+        time: Time period in years
+        compounding_frequency: Number of times interest is compounded per year
+
+    Returns:
+        The final amount after compound interest
+
+    Raises:
+        ValueError: If principal, rate, or time is negative
+        ZeroDivisionError: If compounding_frequency is zero
+
+    Example:
+        >>> calculate_compound_interest(1000, 0.05, 2, 12)
+        1104.94
+
+    Note:
+        The result is rounded to 2 decimal places for currency display.
+    """
+    if principal < 0 or rate < 0 or time < 0:
+        raise ValueError("Principal, rate, and time must be non-negative")
+
+    if compounding_frequency <= 0:
+        raise ZeroDivisionError("Compounding frequency must be positive")
+
+    amount = principal * (1 + rate / compounding_frequency) ** (compounding_frequency * time)
+    return round(amount, 2)
+```
+
+### **Class Documentation**
+
+```python
+class DataProcessor:
+    """
+    A class for processing and analyzing data with various statistical methods.
+
+    This class provides methods for data cleaning, transformation, and analysis.
+    It supports both numerical and categorical data processing.
+
+    Attributes:
+        data: The dataset being processed
+        cleaned_data: The cleaned version of the data
+        statistics: Dictionary containing calculated statistics
+
+    Example:
+        >>> processor = DataProcessor([1, 2, 3, 4, 5])
+        >>> processor.calculate_mean()
+        3.0
+        >>> processor.remove_outliers()
+        >>> processor.get_statistics()
+        {'mean': 3.0, 'std': 1.58, 'count': 5}
+    """
+
+    def __init__(self, data: List[Union[int, float]]) -> None:
+        """
+        Initialize the DataProcessor with a dataset.
+
+        Args:
+            data: List of numerical values to process
+
+        Raises:
+            TypeError: If data contains non-numerical values
+            ValueError: If data is empty
+        """
+        if not data:
+            raise ValueError("Data cannot be empty")
+
+        if not all(isinstance(x, (int, float)) for x in data):
+            raise TypeError("All data values must be numerical")
+
+        self.data = data
+        self.cleaned_data = data.copy()
+        self.statistics = {}
+
+    def calculate_mean(self) -> float:
+        """
+        Calculate the arithmetic mean of the data.
+
+        Returns:
+            The mean value of the dataset
+
+        Example:
+            >>> processor = DataProcessor([1, 2, 3, 4, 5])
+            >>> processor.calculate_mean()
+            3.0
+        """
+        return sum(self.cleaned_data) / len(self.cleaned_data)
+```
+
+## 🚫 TESTING ANTI-PATTERNS
+
+### **NEVER DO THESE IN TESTS:**
+
+- ❌ Make real network calls
+- ❌ Use real database connections
+- ❌ Write tests that depend on external services
+- ❌ Write tests that depend on file system state
+- ❌ Use hardcoded test data without fixtures
+- ❌ Write tests without proper assertions
+- ❌ Skip error handling in tests
+- ❌ Write tests that are too complex
+
+### **COMMON TESTING MISTAKES:**
+
+```python
+# ❌ WRONG - Test with real network call
+def test_fetch_data_wrong():
+    response = requests.get('https://api.example.com/data')
+    assert response.status_code == 200
+
+# ✅ CORRECT - Mock the network call
+@patch('requests.get')
+def test_fetch_data_correct(mock_get):
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {'data': 'test'}
+
+    result = fetch_data()
+    assert result == {'data': 'test'}
+    mock_get.assert_called_once_with('https://api.example.com/data')
+
+# ❌ WRONG - Test without proper setup/teardown
+def test_database_operation_wrong():
+    # This test will fail if run multiple times
+    user = create_user("test@example.com")
+    assert user.email == "test@example.com"
+
+# ✅ CORRECT - Use fixtures for setup/teardown
+@pytest.fixture
+def clean_database():
+    # Setup
+    yield
+    # Teardown - clean up after test
+    clear_all_tables()
+```
+
+## 📋 TESTING CHECKLIST
+
+### **Before Every Commit:**
+
+- [ ] All new functions have unit tests
+- [ ] All edge cases are tested
+- [ ] All error conditions are tested
+- [ ] All external dependencies are mocked
+- [ ] Test coverage is >90%
+- [ ] All tests pass
+- [ ] No flaky tests
+- [ ] Tests are fast (<1 second each)
+- [ ] Tests are independent
+- [ ] All public functions are documented
+
+### **Test Quality Checklist:**
+
+- [ ] Test names clearly describe what is being tested
+- [ ] Tests follow AAA pattern (Arrange, Act, Assert)
+- [ ] Tests are isolated and can run in any order
+- [ ] Tests use appropriate fixtures
+- [ ] Tests verify both success and failure scenarios
+- [ ] Tests are maintainable and readable
+- [ ] Tests don't have side effects
+- [ ] Tests are deterministic (same result every time)

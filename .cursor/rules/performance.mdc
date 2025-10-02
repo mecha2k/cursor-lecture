@@ -1,0 +1,326 @@
+---
+globs: *.py
+description: Performance optimization rules for Python development
+---
+
+# Python Performance Rules
+
+## 🚀 CRITICAL PERFORMANCE REQUIREMENTS
+
+### **MEMORY EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use generators for large datasets instead of lists
+- **ALWAYS** implement `__slots__` for classes with many instances
+- **ALWAYS** use `collections.namedtuple` for simple data structures
+- **NEVER** load entire files into memory if processing line by line
+- **NEVER** create unnecessary intermediate lists
+
+### **CPU EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use list comprehensions over explicit loops when appropriate
+- **ALWAYS** prefer `enumerate()` over manual indexing
+- **ALWAYS** use `collections.defaultdict` for counting operations
+- **ALWAYS** cache expensive computations with `functools.lru_cache`
+- **NEVER** use string concatenation in loops
+
+### **I/O EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use async/await for I/O-bound operations
+- **ALWAYS** batch database operations
+- **ALWAYS** use connection pooling
+- **NEVER** make synchronous calls in async functions
+- **NEVER** open/close connections in loops
+
+## ⚡ PERFORMANCE PATTERNS - ENFORCED
+
+### **Memory Optimization**
+
+```python
+# ✅ CORRECT - Generator for large datasets
+def process_large_file(filename: str) -> Generator[str, None, None]:
+    """Process large file line by line without loading into memory."""
+    with open(filename, 'r') as f:
+        for line in f:
+            yield process_line(line)
+
+# ✅ CORRECT - Using __slots__ for memory efficiency
+class Point:
+    __slots__ = ['x', 'y', 'z']
+
+    def __init__(self, x: float, y: float, z: float):
+        self.x = x
+        self.y = y
+        self.z = z
+
+# ✅ CORRECT - Namedtuple for simple data
+from collections import namedtuple
+User = namedtuple('User', ['id', 'name', 'email'])
+
+# ❌ WRONG - Loading entire file into memory
+def process_large_file_wrong(filename: str) -> List[str]:
+    with open(filename, 'r') as f:
+        lines = f.readlines()  # Loads entire file into memory
+    return [process_line(line) for line in lines]
+```
+
+### **CPU Optimization**
+
+```python
+# ✅ CORRECT - List comprehension
+squares = [x**2 for x in range(1000) if x % 2 == 0]
+
+# ✅ CORRECT - Generator expression for large datasets
+large_sum = sum(x**2 for x in range(1000000))
+
+# ✅ CORRECT - Using enumerate
+for i, item in enumerate(items):
+    process_item(i, item)
+
+# ✅ CORRECT - Using defaultdict for counting
+from collections import defaultdict
+word_count = defaultdict(int)
+for word in words:
+    word_count[word] += 1
+
+# ❌ WRONG - Inefficient string concatenation
+result = ""
+for word in words:
+    result += word + " "  # Creates new string each time
+
+# ✅ CORRECT - Using join()
+result = " ".join(words)
+```
+
+### **Caching and Memoization**
+
+```python
+from functools import lru_cache, wraps
+from typing import Callable, Any
+import time
+
+# ✅ CORRECT - LRU cache for expensive computations
+@lru_cache(maxsize=128)
+def fibonacci(n: int) -> int:
+    """Calculate Fibonacci number with caching."""
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# ✅ CORRECT - Custom caching decorator
+def cache_result(func: Callable) -> Callable:
+    """Cache function results based on arguments."""
+    cache = {}
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        key = str(args) + str(sorted(kwargs.items()))
+        if key not in cache:
+            cache[key] = func(*args, **kwargs)
+        return cache[key]
+
+    return wrapper
+
+@cache_result
+def expensive_calculation(data: List[int]) -> float:
+    """Expensive calculation that benefits from caching."""
+    time.sleep(1)  # Simulate expensive operation
+    return sum(x**2 for x in data) / len(data)
+```
+
+## 🔄 ASYNC/AWAIT PATTERNS
+
+### **Proper Async Implementation**
+
+```python
+import asyncio
+import aiohttp
+from typing import List, Dict, Any
+
+# ✅ CORRECT - Async function for I/O operations
+async def fetch_data(url: str) -> Dict[str, Any]:
+    """Fetch data asynchronously."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
+
+# ✅ CORRECT - Batch async operations
+async def fetch_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
+    """Fetch multiple URLs concurrently."""
+    tasks = [fetch_data(url) for url in urls]
+    return await asyncio.gather(*tasks)
+
+# ✅ CORRECT - Async context manager
+class AsyncDatabaseConnection:
+    async def __aenter__(self):
+        self.conn = await get_async_connection()
+        return self.conn
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.conn.close()
+
+# ❌ WRONG - Blocking operations in async function
+async def bad_async_function():
+    # This blocks the event loop
+    result = requests.get('https://api.example.com')  # Synchronous call
+    return result.json()
+```
+
+### **Database Optimization**
+
+```python
+import asyncio
+from typing import List, Dict, Any
+
+# ✅ CORRECT - Batch database operations
+async def batch_insert_users(users: List[Dict[str, Any]]) -> None:
+    """Insert multiple users in a single transaction."""
+    async with get_async_connection() as conn:
+        async with conn.transaction():
+            await conn.executemany(
+                "INSERT INTO users (name, email) VALUES ($1, $2)",
+                [(user['name'], user['email']) for user in users]
+            )
+
+# ✅ CORRECT - Connection pooling
+class DatabasePool:
+    def __init__(self, max_connections: int = 10):
+        self.semaphore = asyncio.Semaphore(max_connections)
+        self.connections = []
+
+    async def get_connection(self):
+        await self.semaphore.acquire()
+        if self.connections:
+            return self.connections.pop()
+        return await create_connection()
+
+    async def return_connection(self, conn):
+        self.connections.append(conn)
+        self.semaphore.release()
+```
+
+## 📊 PROFILING AND MONITORING
+
+### **Performance Monitoring**
+
+```python
+import time
+import functools
+from typing import Callable, Any
+import logging
+
+def profile_function(func: Callable) -> Callable:
+    """Decorator to profile function execution time."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+
+        execution_time = end_time - start_time
+        logging.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
+
+        return result
+    return wrapper
+
+@profile_function
+def process_large_dataset(data: List[int]) -> List[int]:
+    """Process large dataset with performance monitoring."""
+    return [x**2 for x in data if x % 2 == 0]
+
+# Memory profiling
+import tracemalloc
+
+def profile_memory(func: Callable) -> Callable:
+    """Decorator to profile memory usage."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        tracemalloc.start()
+        result = func(*args, **kwargs)
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
+        logging.info(f"Memory usage - Current: {current / 1024 / 1024:.2f} MB, Peak: {peak / 1024 / 1024:.2f} MB")
+        return result
+    return wrapper
+```
+
+## 🚫 PERFORMANCE ANTI-PATTERNS
+
+### **NEVER USE THESE PATTERNS:**
+
+- ❌ String concatenation in loops
+- ❌ Loading entire files into memory unnecessarily
+- ❌ Creating large intermediate lists
+- ❌ Using synchronous I/O in async functions
+- ❌ Opening/closing connections in loops
+- ❌ Using `global` variables for caching
+- ❌ Recursive functions without memoization
+- ❌ Nested loops when alternatives exist
+
+### **COMMON PERFORMANCE MISTAKES:**
+
+```python
+# ❌ WRONG - Inefficient string building
+def build_string_wrong(items: List[str]) -> str:
+    result = ""
+    for item in items:
+        result += item + ", "  # Creates new string each time
+    return result
+
+# ✅ CORRECT - Efficient string building
+def build_string_correct(items: List[str]) -> str:
+    return ", ".join(items)
+
+# ❌ WRONG - Inefficient list creation
+def process_data_wrong(data: List[int]) -> List[int]:
+    result = []
+    for item in data:
+        if item % 2 == 0:
+            result.append(item * 2)
+    return result
+
+# ✅ CORRECT - List comprehension
+def process_data_correct(data: List[int]) -> List[int]:
+    return [item * 2 for item in data if item % 2 == 0]
+
+# ❌ WRONG - Synchronous I/O in async function
+async def bad_async_io():
+    with open('file.txt', 'r') as f:  # Blocking I/O
+        return f.read()
+
+# ✅ CORRECT - Async I/O
+async def good_async_io():
+    async with aiofiles.open('file.txt', 'r') as f:
+        return await f.read()
+```
+
+## 🎯 PERFORMANCE TARGETS
+
+### **Response Time Requirements:**
+
+- API endpoints: < 200ms for 95th percentile
+- Database queries: < 100ms for simple queries
+- File I/O operations: < 50ms for files < 1MB
+- Memory usage: < 100MB for typical operations
+
+### **Scalability Requirements:**
+
+- Support 1000+ concurrent users
+- Handle 10,000+ requests per minute
+- Process files up to 1GB efficiently
+- Maintain < 1% error rate under load
+
+## 📋 PERFORMANCE CHECKLIST
+
+### **Before Every Deployment:**
+
+- [ ] All I/O operations are async where possible
+- [ ] Large datasets use generators, not lists
+- [ ] Database queries are optimized and batched
+- [ ] Expensive computations are cached
+- [ ] Memory usage is monitored and optimized
+- [ ] No blocking operations in async functions
+- [ ] Connection pooling is implemented
+- [ ] Performance tests pass
+- [ ] Memory leaks are prevented
+- [ ] CPU usage is optimized

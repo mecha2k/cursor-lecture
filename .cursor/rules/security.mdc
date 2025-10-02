@@ -1,0 +1,320 @@
+---
+globs: *.py
+description: Security-focused rules for Python development
+---
+
+# Python Security Rules
+
+## 🚨 CRITICAL SECURITY REQUIREMENTS - ZERO TOLERANCE
+
+### **INPUT VALIDATION - MANDATORY**
+
+- **ALWAYS** validate all user inputs at application boundaries
+- **ALWAYS** use allowlists instead of blocklists for validation
+- **ALWAYS** sanitize data before database operations
+- **NEVER** trust user input without validation
+- **NEVER** use `eval()` or `exec()` with user data
+
+### **AUTHENTICATION & AUTHORIZATION**
+
+- **ALWAYS** use secure password hashing (bcrypt, scrypt, or Argon2)
+- **ALWAYS** implement proper session management
+- **ALWAYS** validate JWT tokens and check expiration
+- **NEVER** store passwords in plain text
+- **NEVER** use weak random number generators for security
+
+### **SECRETS MANAGEMENT**
+
+- **ALWAYS** use environment variables for secrets
+- **ALWAYS** use proper secret management systems in production
+- **NEVER** hardcode secrets, API keys, or passwords in code
+- **NEVER** commit secrets to version control
+
+## 🔒 SECURITY PATTERNS - ENFORCED
+
+### **Safe Input Handling**
+
+```python
+import re
+from typing import Optional
+
+def validate_email(email: str) -> bool:
+    """Validate email format using regex."""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+def sanitize_filename(filename: str) -> str:
+    """Sanitize filename to prevent path traversal."""
+    # Remove dangerous characters
+    safe_filename = re.sub(r'[^\w\-_\.]', '', filename)
+    # Prevent path traversal
+    safe_filename = safe_filename.replace('..', '')
+    return safe_filename
+
+# ✅ CORRECT - Input validation
+def process_user_input(user_input: str) -> Optional[str]:
+    if not isinstance(user_input, str):
+        raise ValueError("Input must be a string")
+
+    if len(user_input) > 1000:
+        raise ValueError("Input too long")
+
+    # Sanitize and validate
+    sanitized = sanitize_filename(user_input)
+    return sanitized if sanitized else None
+```
+
+### **Secure Password Handling**
+
+```python
+import bcrypt
+import secrets
+from typing import Tuple
+
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt."""
+    if not isinstance(password, str):
+        raise ValueError("Password must be a string")
+
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash."""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def generate_secure_token() -> str:
+    """Generate cryptographically secure token."""
+    return secrets.token_urlsafe(32)
+```
+
+### **Safe Database Operations**
+
+```python
+import sqlite3
+from typing import List, Dict, Any
+
+def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Safely retrieve user by ID using parameterized queries."""
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ValueError("Invalid user ID")
+
+    conn = sqlite3.connect('database.db')
+    try:
+        # ✅ CORRECT - Parameterized query prevents SQL injection
+        cursor = conn.execute(
+            "SELECT * FROM users WHERE id = ?",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        return dict(zip([col[0] for col in cursor.description], row)) if row else None
+    finally:
+        conn.close()
+
+# ❌ WRONG - SQL injection vulnerability
+def get_user_by_id_unsafe(user_id: str) -> Dict[str, Any]:
+    conn = sqlite3.connect('database.db')
+    # NEVER DO THIS - SQL injection risk
+    cursor = conn.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    return cursor.fetchone()
+```
+
+## 🚫 CRITICAL SECURITY VIOLATIONS - NEVER ALLOW
+
+### **ABSOLUTE PROHIBITIONS:**
+
+- ❌ **NEVER** use `eval()` or `exec()` with user input
+- ❌ **NEVER** use `pickle` with untrusted data
+- ❌ **NEVER** use `subprocess` with `shell=True` and user input
+- ❌ **NEVER** store secrets in code or configuration files
+- ❌ **NEVER** use weak random number generators for security
+- ❌ **NEVER** disable SSL/TLS certificate verification
+- ❌ **NEVER** use hardcoded credentials or API keys
+
+### **DANGEROUS PATTERNS:**
+
+```python
+# ❌ CRITICAL SECURITY VIOLATIONS - NEVER USE
+
+# 1. Code injection
+user_code = input("Enter code: ")
+eval(user_code)  # NEVER DO THIS
+
+# 2. Command injection
+user_input = input("Enter filename: ")
+os.system(f"cat {user_input}")  # NEVER DO THIS
+
+# 3. Unsafe deserialization
+import pickle
+with open('data.pkl', 'rb') as f:
+    data = pickle.load(f)  # NEVER DO THIS with untrusted data
+
+# 4. Hardcoded secrets
+API_KEY = "sk-1234567890abcdef"  # NEVER DO THIS
+DATABASE_PASSWORD = "password123"  # NEVER DO THIS
+
+# 5. Weak random for security
+import random
+token = str(random.randint(100000, 999999))  # NEVER DO THIS
+```
+
+## 🔐 SECURE CODING PATTERNS
+
+### **Environment Variables for Secrets**
+
+```python
+import os
+from typing import Optional
+
+def get_secret(secret_name: str, default: Optional[str] = None) -> str:
+    """Safely retrieve secret from environment variables."""
+    secret = os.getenv(secret_name, default)
+    if not secret:
+        raise ValueError(f"Secret {secret_name} not found in environment")
+    return secret
+
+# ✅ CORRECT - Use environment variables
+DATABASE_URL = get_secret('DATABASE_URL')
+API_KEY = get_secret('API_KEY')
+JWT_SECRET = get_secret('JWT_SECRET')
+```
+
+### **Secure File Operations**
+
+```python
+import os
+from pathlib import Path
+from typing import Optional
+
+def safe_file_read(file_path: str) -> Optional[str]:
+    """Safely read file with path traversal protection."""
+    path = Path(file_path)
+
+    # Prevent path traversal
+    if '..' in str(path) or path.is_absolute():
+        raise ValueError("Invalid file path")
+
+    # Check if file exists and is readable
+    if not path.exists() or not path.is_file():
+        raise FileNotFoundError("File not found")
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except UnicodeDecodeError:
+        raise ValueError("File contains invalid characters")
+```
+
+### **Secure HTTP Requests**
+
+```python
+import requests
+from typing import Dict, Any
+import ssl
+
+def secure_http_request(url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Make secure HTTP request with proper validation."""
+    # Validate URL
+    if not url.startswith(('https://', 'http://')):
+        raise ValueError("Invalid URL protocol")
+
+    # Create session with secure settings
+    session = requests.Session()
+    session.verify = True  # Verify SSL certificates
+
+    try:
+        response = session.post(
+            url,
+            json=data,
+            timeout=30,
+            headers={'Content-Type': 'application/json'}
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.SSLError:
+        raise ValueError("SSL certificate verification failed")
+    except requests.exceptions.Timeout:
+        raise ValueError("Request timeout")
+```
+
+## 🛡️ SECURITY TESTING REQUIREMENTS
+
+### **Security Test Cases**
+
+```python
+import pytest
+from unittest.mock import patch
+
+class TestSecurityFeatures:
+    """Test security-related functionality."""
+
+    def test_sql_injection_prevention(self):
+        """Test that SQL injection attempts are prevented."""
+        malicious_input = "1; DROP TABLE users; --"
+
+        with pytest.raises(ValueError):
+            get_user_by_id(malicious_input)
+
+    def test_path_traversal_prevention(self):
+        """Test that path traversal attempts are blocked."""
+        malicious_path = "../../../etc/passwd"
+
+        with pytest.raises(ValueError):
+            safe_file_read(malicious_path)
+
+    def test_input_validation(self):
+        """Test that invalid inputs are rejected."""
+        invalid_inputs = [
+            None,
+            "",
+            "x" * 10000,  # Too long
+            "<script>alert('xss')</script>",  # XSS attempt
+        ]
+
+        for invalid_input in invalid_inputs:
+            with pytest.raises((ValueError, TypeError)):
+                validate_email(invalid_input)
+```
+
+## 📋 SECURITY CHECKLIST
+
+### **Before Every Deployment:**
+
+- [ ] No hardcoded secrets or credentials
+- [ ] All user inputs are validated and sanitized
+- [ ] SQL queries use parameterized statements
+- [ ] Passwords are properly hashed
+- [ ] SSL/TLS is properly configured
+- [ ] Error messages don't leak sensitive information
+- [ ] File operations are protected against path traversal
+- [ ] All external requests use HTTPS
+- [ ] Session management is secure
+- [ ] Logging doesn't include sensitive data
+
+### **Security Headers (for web applications):**
+
+```python
+# Add these headers to all HTTP responses
+SECURITY_HEADERS = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Content-Security-Policy': "default-src 'self'",
+}
+```
+
+## 🚨 EMERGENCY SECURITY RESPONSE
+
+### **If Security Issue is Discovered:**
+
+1. **IMMEDIATELY** revoke compromised credentials
+2. **IMMEDIATELY** patch the vulnerability
+3. **IMMEDIATELY** rotate all secrets and keys
+4. **IMMEDIATELY** audit logs for suspicious activity
+5. **IMMEDIATELY** notify security team
+6. **NEVER** ignore or delay security fixes

@@ -1,0 +1,3926 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.cursor/
+  rules/
+    code-quality.mdc
+    performance.mdc
+    python-core.mdc
+    security.mdc
+    testing.mdc
+01_asyncio_basics.py
+02_websocket_basics.py
+03_realtime_chat.py
+04_advanced_websocket.py
+package.json
+quick_websocket_test.py
+README.md
+requirements.txt
+simple_websocket_test.py
+test_websocket.py
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".cursor/rules/code-quality.mdc">
+---
+globs: *.py
+description: Code quality and style enforcement rules for Python
+---
+
+# Python Code Quality & Style Rules
+
+## 🎯 STYLE ENFORCEMENT - MANDATORY
+
+### **PEP 8 Compliance - ZERO TOLERANCE**
+
+- **ALWAYS** use 4 spaces for indentation (never tabs)
+- **ALWAYS** limit lines to 88 characters (Black formatter standard)
+- **ALWAYS** use snake_case for variables and functions
+- **ALWAYS** use PascalCase for classes
+- **ALWAYS** use UPPER_CASE for constants
+- **NEVER** use trailing commas in single-line structures
+- **NEVER** use spaces around `=` in function parameters
+
+### **Import Organization - STRICT ORDER**
+
+```python
+# 1. Standard library imports (alphabetical)
+import json
+import os
+import sys
+from typing import Any, Dict, List, Optional
+
+# 2. Third-party imports (alphabetical)
+import pandas as pd
+import requests
+from django.conf import settings
+
+# 3. Local application imports (alphabetical)
+from .models import User
+from .utils import format_data
+from ..core.exceptions import ValidationError
+```
+
+## 🚨 CRITICAL QUALITY GATES
+
+### **MANDATORY: Function Design**
+
+- **ALWAYS** keep functions under 20 lines
+- **ALWAYS** use single responsibility principle
+- **ALWAYS** return early to reduce nesting
+- **NEVER** use more than 4 parameters (use dataclasses for complex data)
+- **NEVER** use global variables inside functions
+
+### **MANDATORY: Class Design**
+
+- **ALWAYS** use `__slots__` for classes with many instances
+- **ALWAYS** implement `__repr__` and `__str__` methods
+- **ALWAYS** use properties for computed attributes
+- **NEVER** use inheritance for code reuse (prefer composition)
+- **NEVER** use more than 3 levels of inheritance
+
+### **MANDATORY: Error Handling**
+
+```python
+# ✅ CORRECT - Specific exception handling
+try:
+    result = risky_operation()
+except SpecificError as e:
+    logger.error(f"Operation failed: {e}")
+    return None
+except AnotherError as e:
+    logger.warning(f"Non-critical failure: {e}")
+    return default_value
+
+# ❌ WRONG - Bare except
+try:
+    result = risky_operation()
+except:  # NEVER DO THIS
+    pass
+```
+
+## 🔧 CODE PATTERNS - ENFORCED
+
+### **String Handling**
+
+```python
+# ✅ CORRECT - f-strings for formatting
+name = "John"
+message = f"Hello, {name}!"
+
+# ✅ CORRECT - join() for concatenation
+words = ["hello", "world", "python"]
+sentence = " ".join(words)
+
+# ❌ WRONG - String concatenation in loops
+result = ""
+for word in words:
+    result += word + " "  # Inefficient!
+```
+
+### **List and Dictionary Operations**
+
+```python
+# ✅ CORRECT - List comprehensions
+squares = [x**2 for x in range(10) if x % 2 == 0]
+
+# ✅ CORRECT - Dictionary comprehensions
+user_ages = {user.name: user.age for user in users if user.age > 18}
+
+# ✅ CORRECT - Generator expressions for large datasets
+large_sum = sum(x**2 for x in range(1000000))
+
+# ❌ WRONG - Unnecessary list creation
+large_sum = sum([x**2 for x in range(1000000)])  # Creates unnecessary list
+```
+
+### **Context Managers - MANDATORY**
+
+```python
+# ✅ CORRECT - Always use context managers
+with open('file.txt', 'r') as f:
+    content = f.read()
+
+# ✅ CORRECT - Custom context managers
+from contextlib import contextmanager
+
+@contextmanager
+def database_connection():
+    conn = get_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# ❌ WRONG - Manual resource management
+f = open('file.txt', 'r')
+content = f.read()
+f.close()  # May not execute if exception occurs
+```
+
+## 🚫 ABSOLUTE PROHIBITIONS
+
+### **NEVER USE THESE PATTERNS:**
+
+- ❌ `eval()` or `exec()` with any user input
+- ❌ `globals()` or `locals()` for variable access
+- ❌ `import *` in any module
+- ❌ Mutable default arguments: `def func(items=[]):`
+- ❌ Bare `except:` clauses
+- ❌ `==` for None comparison (use `is None`)
+- ❌ `print()` for logging (use proper logging)
+- ❌ Global variables for state management
+
+### **ANTI-PATTERNS TO AVOID:**
+
+```python
+# ❌ WRONG - Mutable default argument
+def add_item(item, items=[]):
+    items.append(item)
+    return items
+
+# ✅ CORRECT - Use None as default
+def add_item(item, items=None):
+    if items is None:
+        items = []
+    items.append(item)
+    return items
+
+# ❌ WRONG - String concatenation in loop
+result = ""
+for item in items:
+    result += str(item)
+
+# ✅ CORRECT - Use join()
+result = "".join(str(item) for item in items)
+```
+
+## 📊 PERFORMANCE REQUIREMENTS
+
+### **Memory Efficiency**
+
+- Use generators for large datasets
+- Implement `__slots__` for classes with many instances
+- Use `collections.namedtuple` for simple data structures
+- Prefer `pathlib.Path` over `os.path`
+
+### **CPU Efficiency**
+
+- Use list comprehensions over explicit loops
+- Prefer `enumerate()` over manual indexing
+- Use `collections.defaultdict` for counting
+- Cache expensive computations with `functools.lru_cache`
+
+### **I/O Efficiency**
+
+- Use async/await for I/O-bound operations
+- Batch database operations
+- Use connection pooling
+- Implement proper caching strategies
+
+## 🧪 TESTING REQUIREMENTS
+
+### **Test Structure**
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+
+class TestUserService:
+    """Test suite for UserService class."""
+
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.user_service = UserService()
+        self.mock_user = Mock()
+
+    def test_create_user_success(self):
+        """Test successful user creation."""
+        # Arrange
+        user_data = {"name": "John", "email": "john@example.com"}
+
+        # Act
+        result = self.user_service.create_user(user_data)
+
+        # Assert
+        assert result.name == "John"
+        assert result.email == "john@example.com"
+
+    def test_create_user_invalid_email(self):
+        """Test user creation with invalid email."""
+        # Arrange
+        user_data = {"name": "John", "email": "invalid-email"}
+
+        # Act & Assert
+        with pytest.raises(ValidationError):
+            self.user_service.create_user(user_data)
+```
+
+### **Test Coverage Requirements**
+
+- **MANDATORY**: >90% code coverage
+- **MANDATORY**: Test all public methods
+- **MANDATORY**: Test both success and failure scenarios
+- **MANDATORY**: Mock all external dependencies
+- **MANDATORY**: Test edge cases and boundary conditions
+
+## 🔍 CODE REVIEW CHECKLIST
+
+### **Before Submitting Code:**
+
+- [ ] All functions have type hints
+- [ ] All public functions have docstrings
+- [ ] Code follows PEP 8 (run `black` and `flake8`)
+- [ ] No bare `except:` clauses
+- [ ] All imports are organized correctly
+- [ ] No hardcoded secrets or credentials
+- [ ] Proper error handling for all external calls
+- [ ] Unit tests cover all new functionality
+- [ ] No performance anti-patterns
+- [ ] Memory usage is optimized for large datasets
+</file>
+
+<file path=".cursor/rules/performance.mdc">
+---
+globs: *.py
+description: Performance optimization rules for Python development
+---
+
+# Python Performance Rules
+
+## 🚀 CRITICAL PERFORMANCE REQUIREMENTS
+
+### **MEMORY EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use generators for large datasets instead of lists
+- **ALWAYS** implement `__slots__` for classes with many instances
+- **ALWAYS** use `collections.namedtuple` for simple data structures
+- **NEVER** load entire files into memory if processing line by line
+- **NEVER** create unnecessary intermediate lists
+
+### **CPU EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use list comprehensions over explicit loops when appropriate
+- **ALWAYS** prefer `enumerate()` over manual indexing
+- **ALWAYS** use `collections.defaultdict` for counting operations
+- **ALWAYS** cache expensive computations with `functools.lru_cache`
+- **NEVER** use string concatenation in loops
+
+### **I/O EFFICIENCY - MANDATORY**
+
+- **ALWAYS** use async/await for I/O-bound operations
+- **ALWAYS** batch database operations
+- **ALWAYS** use connection pooling
+- **NEVER** make synchronous calls in async functions
+- **NEVER** open/close connections in loops
+
+## ⚡ PERFORMANCE PATTERNS - ENFORCED
+
+### **Memory Optimization**
+
+```python
+# ✅ CORRECT - Generator for large datasets
+def process_large_file(filename: str) -> Generator[str, None, None]:
+    """Process large file line by line without loading into memory."""
+    with open(filename, 'r') as f:
+        for line in f:
+            yield process_line(line)
+
+# ✅ CORRECT - Using __slots__ for memory efficiency
+class Point:
+    __slots__ = ['x', 'y', 'z']
+
+    def __init__(self, x: float, y: float, z: float):
+        self.x = x
+        self.y = y
+        self.z = z
+
+# ✅ CORRECT - Namedtuple for simple data
+from collections import namedtuple
+User = namedtuple('User', ['id', 'name', 'email'])
+
+# ❌ WRONG - Loading entire file into memory
+def process_large_file_wrong(filename: str) -> List[str]:
+    with open(filename, 'r') as f:
+        lines = f.readlines()  # Loads entire file into memory
+    return [process_line(line) for line in lines]
+```
+
+### **CPU Optimization**
+
+```python
+# ✅ CORRECT - List comprehension
+squares = [x**2 for x in range(1000) if x % 2 == 0]
+
+# ✅ CORRECT - Generator expression for large datasets
+large_sum = sum(x**2 for x in range(1000000))
+
+# ✅ CORRECT - Using enumerate
+for i, item in enumerate(items):
+    process_item(i, item)
+
+# ✅ CORRECT - Using defaultdict for counting
+from collections import defaultdict
+word_count = defaultdict(int)
+for word in words:
+    word_count[word] += 1
+
+# ❌ WRONG - Inefficient string concatenation
+result = ""
+for word in words:
+    result += word + " "  # Creates new string each time
+
+# ✅ CORRECT - Using join()
+result = " ".join(words)
+```
+
+### **Caching and Memoization**
+
+```python
+from functools import lru_cache, wraps
+from typing import Callable, Any
+import time
+
+# ✅ CORRECT - LRU cache for expensive computations
+@lru_cache(maxsize=128)
+def fibonacci(n: int) -> int:
+    """Calculate Fibonacci number with caching."""
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# ✅ CORRECT - Custom caching decorator
+def cache_result(func: Callable) -> Callable:
+    """Cache function results based on arguments."""
+    cache = {}
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        key = str(args) + str(sorted(kwargs.items()))
+        if key not in cache:
+            cache[key] = func(*args, **kwargs)
+        return cache[key]
+
+    return wrapper
+
+@cache_result
+def expensive_calculation(data: List[int]) -> float:
+    """Expensive calculation that benefits from caching."""
+    time.sleep(1)  # Simulate expensive operation
+    return sum(x**2 for x in data) / len(data)
+```
+
+## 🔄 ASYNC/AWAIT PATTERNS
+
+### **Proper Async Implementation**
+
+```python
+import asyncio
+import aiohttp
+from typing import List, Dict, Any
+
+# ✅ CORRECT - Async function for I/O operations
+async def fetch_data(url: str) -> Dict[str, Any]:
+    """Fetch data asynchronously."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
+
+# ✅ CORRECT - Batch async operations
+async def fetch_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
+    """Fetch multiple URLs concurrently."""
+    tasks = [fetch_data(url) for url in urls]
+    return await asyncio.gather(*tasks)
+
+# ✅ CORRECT - Async context manager
+class AsyncDatabaseConnection:
+    async def __aenter__(self):
+        self.conn = await get_async_connection()
+        return self.conn
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.conn.close()
+
+# ❌ WRONG - Blocking operations in async function
+async def bad_async_function():
+    # This blocks the event loop
+    result = requests.get('https://api.example.com')  # Synchronous call
+    return result.json()
+```
+
+### **Database Optimization**
+
+```python
+import asyncio
+from typing import List, Dict, Any
+
+# ✅ CORRECT - Batch database operations
+async def batch_insert_users(users: List[Dict[str, Any]]) -> None:
+    """Insert multiple users in a single transaction."""
+    async with get_async_connection() as conn:
+        async with conn.transaction():
+            await conn.executemany(
+                "INSERT INTO users (name, email) VALUES ($1, $2)",
+                [(user['name'], user['email']) for user in users]
+            )
+
+# ✅ CORRECT - Connection pooling
+class DatabasePool:
+    def __init__(self, max_connections: int = 10):
+        self.semaphore = asyncio.Semaphore(max_connections)
+        self.connections = []
+
+    async def get_connection(self):
+        await self.semaphore.acquire()
+        if self.connections:
+            return self.connections.pop()
+        return await create_connection()
+
+    async def return_connection(self, conn):
+        self.connections.append(conn)
+        self.semaphore.release()
+```
+
+## 📊 PROFILING AND MONITORING
+
+### **Performance Monitoring**
+
+```python
+import time
+import functools
+from typing import Callable, Any
+import logging
+
+def profile_function(func: Callable) -> Callable:
+    """Decorator to profile function execution time."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+
+        execution_time = end_time - start_time
+        logging.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
+
+        return result
+    return wrapper
+
+@profile_function
+def process_large_dataset(data: List[int]) -> List[int]:
+    """Process large dataset with performance monitoring."""
+    return [x**2 for x in data if x % 2 == 0]
+
+# Memory profiling
+import tracemalloc
+
+def profile_memory(func: Callable) -> Callable:
+    """Decorator to profile memory usage."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        tracemalloc.start()
+        result = func(*args, **kwargs)
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
+        logging.info(f"Memory usage - Current: {current / 1024 / 1024:.2f} MB, Peak: {peak / 1024 / 1024:.2f} MB")
+        return result
+    return wrapper
+```
+
+## 🚫 PERFORMANCE ANTI-PATTERNS
+
+### **NEVER USE THESE PATTERNS:**
+
+- ❌ String concatenation in loops
+- ❌ Loading entire files into memory unnecessarily
+- ❌ Creating large intermediate lists
+- ❌ Using synchronous I/O in async functions
+- ❌ Opening/closing connections in loops
+- ❌ Using `global` variables for caching
+- ❌ Recursive functions without memoization
+- ❌ Nested loops when alternatives exist
+
+### **COMMON PERFORMANCE MISTAKES:**
+
+```python
+# ❌ WRONG - Inefficient string building
+def build_string_wrong(items: List[str]) -> str:
+    result = ""
+    for item in items:
+        result += item + ", "  # Creates new string each time
+    return result
+
+# ✅ CORRECT - Efficient string building
+def build_string_correct(items: List[str]) -> str:
+    return ", ".join(items)
+
+# ❌ WRONG - Inefficient list creation
+def process_data_wrong(data: List[int]) -> List[int]:
+    result = []
+    for item in data:
+        if item % 2 == 0:
+            result.append(item * 2)
+    return result
+
+# ✅ CORRECT - List comprehension
+def process_data_correct(data: List[int]) -> List[int]:
+    return [item * 2 for item in data if item % 2 == 0]
+
+# ❌ WRONG - Synchronous I/O in async function
+async def bad_async_io():
+    with open('file.txt', 'r') as f:  # Blocking I/O
+        return f.read()
+
+# ✅ CORRECT - Async I/O
+async def good_async_io():
+    async with aiofiles.open('file.txt', 'r') as f:
+        return await f.read()
+```
+
+## 🎯 PERFORMANCE TARGETS
+
+### **Response Time Requirements:**
+
+- API endpoints: < 200ms for 95th percentile
+- Database queries: < 100ms for simple queries
+- File I/O operations: < 50ms for files < 1MB
+- Memory usage: < 100MB for typical operations
+
+### **Scalability Requirements:**
+
+- Support 1000+ concurrent users
+- Handle 10,000+ requests per minute
+- Process files up to 1GB efficiently
+- Maintain < 1% error rate under load
+
+## 📋 PERFORMANCE CHECKLIST
+
+### **Before Every Deployment:**
+
+- [ ] All I/O operations are async where possible
+- [ ] Large datasets use generators, not lists
+- [ ] Database queries are optimized and batched
+- [ ] Expensive computations are cached
+- [ ] Memory usage is monitored and optimized
+- [ ] No blocking operations in async functions
+- [ ] Connection pooling is implemented
+- [ ] Performance tests pass
+- [ ] Memory leaks are prevented
+- [ ] CPU usage is optimized
+</file>
+
+<file path=".cursor/rules/python-core.mdc">
+---
+alwaysApply: true
+description: Core Python development rules and best practices
+---
+
+# Python Core Development Rules
+
+## 🚨 CRITICAL REQUIREMENTS - NEVER VIOLATE
+
+### **MANDATORY: Type Safety & Error Handling**
+
+- **ALWAYS** use type hints for function parameters, return types, and class attributes
+- **ALWAYS** handle exceptions with specific exception types, never bare `except:`
+- **ALWAYS** use `typing.Optional` for nullable values, never `None` without explicit typing
+- **NEVER** use `Any` type unless absolutely necessary - prefer specific types
+- **NEVER** ignore exceptions silently - always log or handle appropriately
+
+### **MANDATORY: Code Structure**
+
+- **ALWAYS** follow PEP 8 style guidelines strictly
+- **ALWAYS** use meaningful variable and function names (minimum 3 characters)
+- **ALWAYS** write docstrings for all public functions, classes, and modules
+- **NEVER** use single-letter variable names except for loop counters (i, j, k)
+- **NEVER** exceed 88 characters per line (use Black formatter standard)
+
+### **MANDATORY: Import Organization**
+
+```python
+# Standard library imports
+import os
+import sys
+from typing import List, Dict, Optional
+
+# Third-party imports
+import requests
+import pandas as pd
+
+# Local imports
+from .models import User
+from .utils import validate_input
+```
+
+## 🎯 OPTIMIZATION TECHNIQUES
+
+### **Performance Critical Patterns**
+
+- Use list comprehensions over explicit loops when appropriate
+- Prefer `enumerate()` over manual indexing
+- Use `collections.defaultdict` for counting operations
+- Cache expensive computations with `functools.lru_cache`
+
+### **Memory Management**
+
+- Use generators for large datasets instead of lists
+- Implement `__slots__` for classes with many instances
+- Use context managers (`with` statements) for resource management
+- Prefer `pathlib.Path` over `os.path` for file operations
+
+### **Modern Python Features (3.8+)**
+
+- Use f-strings for string formatting
+- Leverage dataclasses for simple data containers
+- Use walrus operator (`:=`) judiciously for assignment expressions
+- Prefer `typing.Union` over `typing.Optional` for explicit union types
+
+## 🚫 ABSOLUTE PROHIBITIONS
+
+### **NEVER DO THESE:**
+
+- ❌ Use mutable default arguments: `def func(items=[]):`
+- ❌ Use `==` to compare with `None` (use `is None` instead)
+- ❌ Use `eval()` or `exec()` with user input
+- ❌ Use bare `except:` clauses
+- ❌ Use `import *` in production code
+- ❌ Use global variables for state management
+- ❌ Use `print()` for logging (use proper logging)
+- ❌ Use string concatenation in loops (use `join()`)
+
+### **SECURITY VIOLATIONS:**
+
+- ❌ Never use `pickle` with untrusted data
+- ❌ Never use `subprocess` with shell=True and user input
+- ❌ Never store secrets in code (use environment variables)
+- ❌ Never use weak random number generators for security
+
+## 📋 CODE QUALITY CHECKLIST
+
+### **Before Every Commit:**
+
+- [ ] All functions have type hints
+- [ ] All public functions have docstrings
+- [ ] No bare `except:` clauses
+- [ ] All imports are organized correctly
+- [ ] Code follows PEP 8 (run `black` and `flake8`)
+- [ ] No hardcoded secrets or credentials
+- [ ] Proper error handling for all external calls
+
+### **Function Design Pattern:**
+
+```python
+def process_user_data(
+    user_id: int,
+    data: Dict[str, Any],
+    validate: bool = True
+) -> Optional[ProcessedData]:
+    """
+    Process user data with optional validation.
+
+    Args:
+        user_id: Unique identifier for the user
+        data: Raw user data dictionary
+        validate: Whether to validate data before processing
+
+    Returns:
+        ProcessedData object if successful, None if validation fails
+
+    Raises:
+        ValueError: If user_id is invalid
+        DataValidationError: If data validation fails
+    """
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ValueError(f"Invalid user_id: {user_id}")
+
+    try:
+        if validate:
+            validated_data = validate_user_data(data)
+        else:
+            validated_data = data
+
+        return ProcessedData.from_dict(validated_data)
+    except ValidationError as e:
+        logger.error(f"Data validation failed: {e}")
+        return None
+```
+
+## 🔧 DEVELOPMENT WORKFLOW
+
+### **File Organization:**
+
+- Keep related functionality in the same module
+- Use `__init__.py` files to control package imports
+- Separate configuration from business logic
+- Use dependency injection for testability
+
+### **Error Handling Strategy:**
+
+1. **Fail Fast**: Validate inputs at function boundaries
+2. **Specific Exceptions**: Create custom exception classes for business logic
+3. **Graceful Degradation**: Handle external service failures gracefully
+4. **Logging**: Log all errors with appropriate levels and context
+
+### **Testing Requirements:**
+
+- Write unit tests for all public functions
+- Use pytest fixtures for test setup
+- Mock external dependencies
+- Aim for >90% code coverage
+- Test both success and failure scenarios
+</file>
+
+<file path=".cursor/rules/security.mdc">
+---
+globs: *.py
+description: Security-focused rules for Python development
+---
+
+# Python Security Rules
+
+## 🚨 CRITICAL SECURITY REQUIREMENTS - ZERO TOLERANCE
+
+### **INPUT VALIDATION - MANDATORY**
+
+- **ALWAYS** validate all user inputs at application boundaries
+- **ALWAYS** use allowlists instead of blocklists for validation
+- **ALWAYS** sanitize data before database operations
+- **NEVER** trust user input without validation
+- **NEVER** use `eval()` or `exec()` with user data
+
+### **AUTHENTICATION & AUTHORIZATION**
+
+- **ALWAYS** use secure password hashing (bcrypt, scrypt, or Argon2)
+- **ALWAYS** implement proper session management
+- **ALWAYS** validate JWT tokens and check expiration
+- **NEVER** store passwords in plain text
+- **NEVER** use weak random number generators for security
+
+### **SECRETS MANAGEMENT**
+
+- **ALWAYS** use environment variables for secrets
+- **ALWAYS** use proper secret management systems in production
+- **NEVER** hardcode secrets, API keys, or passwords in code
+- **NEVER** commit secrets to version control
+
+## 🔒 SECURITY PATTERNS - ENFORCED
+
+### **Safe Input Handling**
+
+```python
+import re
+from typing import Optional
+
+def validate_email(email: str) -> bool:
+    """Validate email format using regex."""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+def sanitize_filename(filename: str) -> str:
+    """Sanitize filename to prevent path traversal."""
+    # Remove dangerous characters
+    safe_filename = re.sub(r'[^\w\-_\.]', '', filename)
+    # Prevent path traversal
+    safe_filename = safe_filename.replace('..', '')
+    return safe_filename
+
+# ✅ CORRECT - Input validation
+def process_user_input(user_input: str) -> Optional[str]:
+    if not isinstance(user_input, str):
+        raise ValueError("Input must be a string")
+
+    if len(user_input) > 1000:
+        raise ValueError("Input too long")
+
+    # Sanitize and validate
+    sanitized = sanitize_filename(user_input)
+    return sanitized if sanitized else None
+```
+
+### **Secure Password Handling**
+
+```python
+import bcrypt
+import secrets
+from typing import Tuple
+
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt."""
+    if not isinstance(password, str):
+        raise ValueError("Password must be a string")
+
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash."""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def generate_secure_token() -> str:
+    """Generate cryptographically secure token."""
+    return secrets.token_urlsafe(32)
+```
+
+### **Safe Database Operations**
+
+```python
+import sqlite3
+from typing import List, Dict, Any
+
+def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Safely retrieve user by ID using parameterized queries."""
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ValueError("Invalid user ID")
+
+    conn = sqlite3.connect('database.db')
+    try:
+        # ✅ CORRECT - Parameterized query prevents SQL injection
+        cursor = conn.execute(
+            "SELECT * FROM users WHERE id = ?",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        return dict(zip([col[0] for col in cursor.description], row)) if row else None
+    finally:
+        conn.close()
+
+# ❌ WRONG - SQL injection vulnerability
+def get_user_by_id_unsafe(user_id: str) -> Dict[str, Any]:
+    conn = sqlite3.connect('database.db')
+    # NEVER DO THIS - SQL injection risk
+    cursor = conn.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    return cursor.fetchone()
+```
+
+## 🚫 CRITICAL SECURITY VIOLATIONS - NEVER ALLOW
+
+### **ABSOLUTE PROHIBITIONS:**
+
+- ❌ **NEVER** use `eval()` or `exec()` with user input
+- ❌ **NEVER** use `pickle` with untrusted data
+- ❌ **NEVER** use `subprocess` with `shell=True` and user input
+- ❌ **NEVER** store secrets in code or configuration files
+- ❌ **NEVER** use weak random number generators for security
+- ❌ **NEVER** disable SSL/TLS certificate verification
+- ❌ **NEVER** use hardcoded credentials or API keys
+
+### **DANGEROUS PATTERNS:**
+
+```python
+# ❌ CRITICAL SECURITY VIOLATIONS - NEVER USE
+
+# 1. Code injection
+user_code = input("Enter code: ")
+eval(user_code)  # NEVER DO THIS
+
+# 2. Command injection
+user_input = input("Enter filename: ")
+os.system(f"cat {user_input}")  # NEVER DO THIS
+
+# 3. Unsafe deserialization
+import pickle
+with open('data.pkl', 'rb') as f:
+    data = pickle.load(f)  # NEVER DO THIS with untrusted data
+
+# 4. Hardcoded secrets
+API_KEY = "sk-1234567890abcdef"  # NEVER DO THIS
+DATABASE_PASSWORD = "password123"  # NEVER DO THIS
+
+# 5. Weak random for security
+import random
+token = str(random.randint(100000, 999999))  # NEVER DO THIS
+```
+
+## 🔐 SECURE CODING PATTERNS
+
+### **Environment Variables for Secrets**
+
+```python
+import os
+from typing import Optional
+
+def get_secret(secret_name: str, default: Optional[str] = None) -> str:
+    """Safely retrieve secret from environment variables."""
+    secret = os.getenv(secret_name, default)
+    if not secret:
+        raise ValueError(f"Secret {secret_name} not found in environment")
+    return secret
+
+# ✅ CORRECT - Use environment variables
+DATABASE_URL = get_secret('DATABASE_URL')
+API_KEY = get_secret('API_KEY')
+JWT_SECRET = get_secret('JWT_SECRET')
+```
+
+### **Secure File Operations**
+
+```python
+import os
+from pathlib import Path
+from typing import Optional
+
+def safe_file_read(file_path: str) -> Optional[str]:
+    """Safely read file with path traversal protection."""
+    path = Path(file_path)
+
+    # Prevent path traversal
+    if '..' in str(path) or path.is_absolute():
+        raise ValueError("Invalid file path")
+
+    # Check if file exists and is readable
+    if not path.exists() or not path.is_file():
+        raise FileNotFoundError("File not found")
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except UnicodeDecodeError:
+        raise ValueError("File contains invalid characters")
+```
+
+### **Secure HTTP Requests**
+
+```python
+import requests
+from typing import Dict, Any
+import ssl
+
+def secure_http_request(url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Make secure HTTP request with proper validation."""
+    # Validate URL
+    if not url.startswith(('https://', 'http://')):
+        raise ValueError("Invalid URL protocol")
+
+    # Create session with secure settings
+    session = requests.Session()
+    session.verify = True  # Verify SSL certificates
+
+    try:
+        response = session.post(
+            url,
+            json=data,
+            timeout=30,
+            headers={'Content-Type': 'application/json'}
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.SSLError:
+        raise ValueError("SSL certificate verification failed")
+    except requests.exceptions.Timeout:
+        raise ValueError("Request timeout")
+```
+
+## 🛡️ SECURITY TESTING REQUIREMENTS
+
+### **Security Test Cases**
+
+```python
+import pytest
+from unittest.mock import patch
+
+class TestSecurityFeatures:
+    """Test security-related functionality."""
+
+    def test_sql_injection_prevention(self):
+        """Test that SQL injection attempts are prevented."""
+        malicious_input = "1; DROP TABLE users; --"
+
+        with pytest.raises(ValueError):
+            get_user_by_id(malicious_input)
+
+    def test_path_traversal_prevention(self):
+        """Test that path traversal attempts are blocked."""
+        malicious_path = "../../../etc/passwd"
+
+        with pytest.raises(ValueError):
+            safe_file_read(malicious_path)
+
+    def test_input_validation(self):
+        """Test that invalid inputs are rejected."""
+        invalid_inputs = [
+            None,
+            "",
+            "x" * 10000,  # Too long
+            "<script>alert('xss')</script>",  # XSS attempt
+        ]
+
+        for invalid_input in invalid_inputs:
+            with pytest.raises((ValueError, TypeError)):
+                validate_email(invalid_input)
+```
+
+## 📋 SECURITY CHECKLIST
+
+### **Before Every Deployment:**
+
+- [ ] No hardcoded secrets or credentials
+- [ ] All user inputs are validated and sanitized
+- [ ] SQL queries use parameterized statements
+- [ ] Passwords are properly hashed
+- [ ] SSL/TLS is properly configured
+- [ ] Error messages don't leak sensitive information
+- [ ] File operations are protected against path traversal
+- [ ] All external requests use HTTPS
+- [ ] Session management is secure
+- [ ] Logging doesn't include sensitive data
+
+### **Security Headers (for web applications):**
+
+```python
+# Add these headers to all HTTP responses
+SECURITY_HEADERS = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Content-Security-Policy': "default-src 'self'",
+}
+```
+
+## 🚨 EMERGENCY SECURITY RESPONSE
+
+### **If Security Issue is Discovered:**
+
+1. **IMMEDIATELY** revoke compromised credentials
+2. **IMMEDIATELY** patch the vulnerability
+3. **IMMEDIATELY** rotate all secrets and keys
+4. **IMMEDIATELY** audit logs for suspicious activity
+5. **IMMEDIATELY** notify security team
+6. **NEVER** ignore or delay security fixes
+</file>
+
+<file path=".cursor/rules/testing.mdc">
+---
+globs: test_*.py,*_test.py,conftest.py
+description: Testing and documentation rules for Python development
+---
+
+# Python Testing & Documentation Rules
+
+## 🧪 CRITICAL TESTING REQUIREMENTS
+
+### **TEST COVERAGE - MANDATORY**
+
+- **ALWAYS** achieve >90% code coverage
+- **ALWAYS** test all public functions and methods
+- **ALWAYS** test both success and failure scenarios
+- **ALWAYS** test edge cases and boundary conditions
+- **NEVER** commit code without corresponding tests
+
+### **TEST STRUCTURE - MANDATORY**
+
+- **ALWAYS** use pytest as the testing framework
+- **ALWAYS** organize tests in classes for related functionality
+- **ALWAYS** use descriptive test method names
+- **ALWAYS** follow AAA pattern (Arrange, Act, Assert)
+- **NEVER** write tests that depend on external services
+
+### **MOCKING - MANDATORY**
+
+- **ALWAYS** mock external dependencies (APIs, databases, file system)
+- **ALWAYS** use dependency injection for testability
+- **ALWAYS** verify mock calls and arguments
+- **NEVER** make real network calls in tests
+- **NEVER** use real database connections in unit tests
+
+## 📝 DOCUMENTATION REQUIREMENTS
+
+### **DOCSTRINGS - MANDATORY**
+
+- **ALWAYS** write docstrings for all public functions, classes, and modules
+- **ALWAYS** follow Google-style docstring format
+- **ALWAYS** include parameter types, return types, and exceptions
+- **ALWAYS** provide usage examples for complex functions
+- **NEVER** leave public functions undocumented
+
+### **CODE COMMENTS - MANDATORY**
+
+- **ALWAYS** explain complex business logic
+- **ALWAYS** document non-obvious performance optimizations
+- **ALWAYS** explain why, not what
+- **NEVER** comment obvious code
+- **NEVER** leave TODO comments in production code
+
+## 🧪 TESTING PATTERNS - ENFORCED
+
+### **Unit Test Structure**
+
+```python
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+from typing import List, Dict, Any
+import tempfile
+import os
+
+class TestUserService:
+    """Test suite for UserService class."""
+
+    def setup_method(self):
+        """Set up test fixtures before each test method."""
+        self.user_service = UserService()
+        self.mock_user = Mock()
+        self.mock_user.id = 1
+        self.mock_user.name = "John Doe"
+        self.mock_user.email = "john@example.com"
+
+    def test_create_user_success(self):
+        """Test successful user creation with valid data."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "age": 30
+        }
+        expected_user = User(id=1, **user_data)
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.create.return_value = expected_user
+
+            # Act
+            result = self.user_service.create_user(user_data)
+
+            # Assert
+            assert result == expected_user
+            mock_repo.return_value.create.assert_called_once_with(user_data)
+
+    def test_create_user_invalid_email(self):
+        """Test user creation fails with invalid email format."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "invalid-email-format",
+            "age": 30
+        }
+
+        # Act & Assert
+        with pytest.raises(ValidationError, match="Invalid email format"):
+            self.user_service.create_user(user_data)
+
+    def test_create_user_duplicate_email(self):
+        """Test user creation fails when email already exists."""
+        # Arrange
+        user_data = {
+            "name": "John Doe",
+            "email": "existing@example.com",
+            "age": 30
+        }
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_email.return_value = self.mock_user
+
+            # Act & Assert
+            with pytest.raises(DuplicateEmailError):
+                self.user_service.create_user(user_data)
+
+    def test_get_user_by_id_success(self):
+        """Test successful user retrieval by ID."""
+        # Arrange
+        user_id = 1
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_id.return_value = self.mock_user
+
+            # Act
+            result = self.user_service.get_user_by_id(user_id)
+
+            # Assert
+            assert result == self.mock_user
+            mock_repo.return_value.find_by_id.assert_called_once_with(user_id)
+
+    def test_get_user_by_id_not_found(self):
+        """Test user retrieval returns None when user doesn't exist."""
+        # Arrange
+        user_id = 999
+
+        with patch('app.services.user_service.UserRepository') as mock_repo:
+            mock_repo.return_value.find_by_id.return_value = None
+
+            # Act
+            result = self.user_service.get_user_by_id(user_id)
+
+            # Assert
+            assert result is None
+```
+
+### **Integration Test Structure**
+
+```python
+import pytest
+import asyncio
+from httpx import AsyncClient
+from app.main import app
+from app.database import get_test_db
+
+class TestUserAPI:
+    """Integration tests for User API endpoints."""
+
+    @pytest.fixture
+    async def client(self):
+        """Create test client with test database."""
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            yield ac
+
+    @pytest.fixture
+    async def test_user(self, client):
+        """Create a test user for API tests."""
+        user_data = {
+            "name": "Test User",
+            "email": "test@example.com",
+            "age": 25
+        }
+        response = await client.post("/users", json=user_data)
+        return response.json()
+
+    async def test_create_user_endpoint(self, client):
+        """Test POST /users endpoint."""
+        # Arrange
+        user_data = {
+            "name": "New User",
+            "email": "newuser@example.com",
+            "age": 30
+        }
+
+        # Act
+        response = await client.post("/users", json=user_data)
+
+        # Assert
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == user_data["name"]
+        assert data["email"] == user_data["email"]
+        assert "id" in data
+
+    async def test_get_user_endpoint(self, client, test_user):
+        """Test GET /users/{user_id} endpoint."""
+        # Act
+        response = await client.get(f"/users/{test_user['id']}")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == test_user["id"]
+        assert data["name"] == test_user["name"]
+
+    async def test_get_user_not_found(self, client):
+        """Test GET /users/{user_id} returns 404 for non-existent user."""
+        # Act
+        response = await client.get("/users/999")
+
+        # Assert
+        assert response.status_code == 404
+```
+
+### **Fixture Management**
+
+```python
+import pytest
+from typing import Generator, AsyncGenerator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base, get_db
+from app.models import User
+
+@pytest.fixture(scope="session")
+def test_engine():
+    """Create test database engine."""
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    return engine
+
+@pytest.fixture
+def test_db(test_engine):
+    """Create test database session."""
+    TestingSessionLocal = sessionmaker(bind=test_engine)
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@pytest.fixture
+def sample_user(test_db) -> User:
+    """Create a sample user for testing."""
+    user = User(
+        name="Test User",
+        email="test@example.com",
+        age=25
+    )
+    test_db.add(user)
+    test_db.commit()
+    test_db.refresh(user)
+    return user
+
+@pytest.fixture
+def multiple_users(test_db) -> List[User]:
+    """Create multiple users for testing."""
+    users = [
+        User(name=f"User {i}", email=f"user{i}@example.com", age=20+i)
+        for i in range(5)
+    ]
+    test_db.add_all(users)
+    test_db.commit()
+    return users
+```
+
+## 📚 DOCUMENTATION PATTERNS
+
+### **Function Documentation**
+
+```python
+def calculate_compound_interest(
+    principal: float,
+    rate: float,
+    time: int,
+    compounding_frequency: int = 12
+) -> float:
+    """
+    Calculate compound interest for an investment.
+
+    This function calculates the compound interest using the formula:
+    A = P(1 + r/n)^(nt)
+    where:
+    - A = final amount
+    - P = principal amount
+    - r = annual interest rate
+    - n = number of times interest is compounded per year
+    - t = time in years
+
+    Args:
+        principal: The initial amount of money invested
+        rate: Annual interest rate as a decimal (e.g., 0.05 for 5%)
+        time: Time period in years
+        compounding_frequency: Number of times interest is compounded per year
+
+    Returns:
+        The final amount after compound interest
+
+    Raises:
+        ValueError: If principal, rate, or time is negative
+        ZeroDivisionError: If compounding_frequency is zero
+
+    Example:
+        >>> calculate_compound_interest(1000, 0.05, 2, 12)
+        1104.94
+
+    Note:
+        The result is rounded to 2 decimal places for currency display.
+    """
+    if principal < 0 or rate < 0 or time < 0:
+        raise ValueError("Principal, rate, and time must be non-negative")
+
+    if compounding_frequency <= 0:
+        raise ZeroDivisionError("Compounding frequency must be positive")
+
+    amount = principal * (1 + rate / compounding_frequency) ** (compounding_frequency * time)
+    return round(amount, 2)
+```
+
+### **Class Documentation**
+
+```python
+class DataProcessor:
+    """
+    A class for processing and analyzing data with various statistical methods.
+
+    This class provides methods for data cleaning, transformation, and analysis.
+    It supports both numerical and categorical data processing.
+
+    Attributes:
+        data: The dataset being processed
+        cleaned_data: The cleaned version of the data
+        statistics: Dictionary containing calculated statistics
+
+    Example:
+        >>> processor = DataProcessor([1, 2, 3, 4, 5])
+        >>> processor.calculate_mean()
+        3.0
+        >>> processor.remove_outliers()
+        >>> processor.get_statistics()
+        {'mean': 3.0, 'std': 1.58, 'count': 5}
+    """
+
+    def __init__(self, data: List[Union[int, float]]) -> None:
+        """
+        Initialize the DataProcessor with a dataset.
+
+        Args:
+            data: List of numerical values to process
+
+        Raises:
+            TypeError: If data contains non-numerical values
+            ValueError: If data is empty
+        """
+        if not data:
+            raise ValueError("Data cannot be empty")
+
+        if not all(isinstance(x, (int, float)) for x in data):
+            raise TypeError("All data values must be numerical")
+
+        self.data = data
+        self.cleaned_data = data.copy()
+        self.statistics = {}
+
+    def calculate_mean(self) -> float:
+        """
+        Calculate the arithmetic mean of the data.
+
+        Returns:
+            The mean value of the dataset
+
+        Example:
+            >>> processor = DataProcessor([1, 2, 3, 4, 5])
+            >>> processor.calculate_mean()
+            3.0
+        """
+        return sum(self.cleaned_data) / len(self.cleaned_data)
+```
+
+## 🚫 TESTING ANTI-PATTERNS
+
+### **NEVER DO THESE IN TESTS:**
+
+- ❌ Make real network calls
+- ❌ Use real database connections
+- ❌ Write tests that depend on external services
+- ❌ Write tests that depend on file system state
+- ❌ Use hardcoded test data without fixtures
+- ❌ Write tests without proper assertions
+- ❌ Skip error handling in tests
+- ❌ Write tests that are too complex
+
+### **COMMON TESTING MISTAKES:**
+
+```python
+# ❌ WRONG - Test with real network call
+def test_fetch_data_wrong():
+    response = requests.get('https://api.example.com/data')
+    assert response.status_code == 200
+
+# ✅ CORRECT - Mock the network call
+@patch('requests.get')
+def test_fetch_data_correct(mock_get):
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {'data': 'test'}
+
+    result = fetch_data()
+    assert result == {'data': 'test'}
+    mock_get.assert_called_once_with('https://api.example.com/data')
+
+# ❌ WRONG - Test without proper setup/teardown
+def test_database_operation_wrong():
+    # This test will fail if run multiple times
+    user = create_user("test@example.com")
+    assert user.email == "test@example.com"
+
+# ✅ CORRECT - Use fixtures for setup/teardown
+@pytest.fixture
+def clean_database():
+    # Setup
+    yield
+    # Teardown - clean up after test
+    clear_all_tables()
+```
+
+## 📋 TESTING CHECKLIST
+
+### **Before Every Commit:**
+
+- [ ] All new functions have unit tests
+- [ ] All edge cases are tested
+- [ ] All error conditions are tested
+- [ ] All external dependencies are mocked
+- [ ] Test coverage is >90%
+- [ ] All tests pass
+- [ ] No flaky tests
+- [ ] Tests are fast (<1 second each)
+- [ ] Tests are independent
+- [ ] All public functions are documented
+
+### **Test Quality Checklist:**
+
+- [ ] Test names clearly describe what is being tested
+- [ ] Tests follow AAA pattern (Arrange, Act, Assert)
+- [ ] Tests are isolated and can run in any order
+- [ ] Tests use appropriate fixtures
+- [ ] Tests verify both success and failure scenarios
+- [ ] Tests are maintainable and readable
+- [ ] Tests don't have side effects
+- [ ] Tests are deterministic (same result every time)
+</file>
+
+<file path="01_asyncio_basics.py">
+"""
+asyncio 기초 예제
+비동기 프로그래밍의 기본 개념을 학습합니다.
+"""
+
+import asyncio
+import time
+from typing import List
+
+
+async def simple_task(name: str, delay: float) -> str:
+    """
+    간단한 비동기 작업을 수행합니다.
+
+    Args:
+        name: 작업 이름
+        delay: 대기 시간 (초)
+
+    Returns:
+        완료 메시지
+    """
+    print(f"작업 {name} 시작")
+    await asyncio.sleep(delay)  # 비동기 대기
+    print(f"작업 {name} 완료")
+    return f"{name} 작업이 {delay}초 후 완료되었습니다"
+
+
+async def fetch_data(url: str, delay: float) -> dict:
+    """
+    가상의 데이터 페칭 작업을 시뮬레이션합니다.
+
+    Args:
+        url: 가상의 URL
+        delay: 네트워크 지연 시뮬레이션
+
+    Returns:
+        가상의 데이터
+    """
+    print(f"데이터 요청: {url}")
+    await asyncio.sleep(delay)
+    return {
+        "url": url,
+        "data": f"URL {url}에서 가져온 데이터",
+        "timestamp": time.time(),
+    }
+
+
+def sync_task(name: str, delay: float) -> str:
+    """
+    동기 버전의 작업 함수 (비교용)
+
+    Args:
+        name: 작업 이름
+        delay: 대기 시간 (초)
+
+    Returns:
+        완료 메시지
+    """
+    print(f"동기 작업 {name} 시작")
+    time.sleep(delay)  # 동기 대기 (블로킹)
+    print(f"동기 작업 {name} 완료")
+    return f"{name} 작업이 {delay}초 후 완료되었습니다"
+
+
+async def demo_sleep_difference():
+    """time.sleep vs asyncio.sleep 차이점 데모"""
+    print("=== time.sleep vs asyncio.sleep 차이점 ===")
+
+    async def async_task_with_sync_sleep(name: str, delay: float) -> str:
+        """비동기 함수에서 time.sleep 사용 (잘못된 방법)"""
+        print(f"작업 {name} 시작 (time.sleep 사용)")
+        time.sleep(delay)  # ❌ 이렇게 하면 안됨!
+        print(f"작업 {name} 완료")
+        return f"{name} 완료"
+
+    async def async_task_with_async_sleep(name: str, delay: float) -> str:
+        """비동기 함수에서 asyncio.sleep 사용 (올바른 방법)"""
+        print(f"작업 {name} 시작 (asyncio.sleep 사용)")
+        await asyncio.sleep(delay)  # ✅ 올바른 방법
+        print(f"작업 {name} 완료")
+        return f"{name} 완료"
+
+    # 1. time.sleep을 사용한 잘못된 비동기 코드
+    print("\n--- time.sleep 사용 (잘못된 방법) ---")
+    start_time = time.time()
+    results1 = await asyncio.gather(
+        async_task_with_sync_sleep("A", 1.0),
+        async_task_with_sync_sleep("B", 1.0),
+        async_task_with_sync_sleep("C", 1.0),
+    )
+    end_time = time.time()
+    print(f"time.sleep 사용 시간: {end_time - start_time:.2f}초")
+    print("❌ time.sleep은 블로킹이므로 동시 실행이 안됨!")
+
+    # 2. asyncio.sleep을 사용한 올바른 비동기 코드
+    print("\n--- asyncio.sleep 사용 (올바른 방법) ---")
+    start_time = time.time()
+    results2 = await asyncio.gather(
+        async_task_with_async_sleep("D", 1.0),
+        async_task_with_async_sleep("E", 1.0),
+        async_task_with_async_sleep("F", 1.0),
+    )
+    end_time = time.time()
+    print(f"asyncio.sleep 사용 시간: {end_time - start_time:.2f}초")
+    print("✅ asyncio.sleep은 논블로킹이므로 동시 실행됨!")
+
+
+async def main_basic():
+    """기본적인 asyncio 사용법"""
+    print("=== asyncio 기본 예제 ===")
+
+    # 1. 단일 코루틴 실행
+    result = await simple_task("A", 1.0)
+    print(f"결과: {result}")
+
+    # 2. sleep 차이점 데모
+    await demo_sleep_difference()
+
+    # 3. 동기 함수로 순차 실행 (느림)
+    print("\n--- 동기 함수 순차 실행 ---")
+    start_time = time.time()
+    result1 = sync_task("B", 1.0)
+    result2 = sync_task("C", 1.0)
+    end_time = time.time()
+    print(f"동기 순차 실행 시간: {end_time - start_time:.2f}초")
+
+    # 4. 비동기 함수로 순차 실행 (여전히 느림)
+    print("\n--- 비동기 함수 순차 실행 ---")
+    start_time = time.time()
+    result1 = await simple_task("D", 1.0)
+    result2 = await simple_task("E", 1.0)
+    end_time = time.time()
+    print(f"비동기 순차 실행 시간: {end_time - start_time:.2f}초")
+    print("💡 순차 실행은 동기/비동기 차이가 없습니다!")
+
+
+async def main_concurrent():
+    """동시 실행 예제"""
+    print("\n=== 동시 실행 예제 ===")
+
+    # 1. 동기 함수로 순차 실행 (느림)
+    print("--- 동기 함수 순차 실행 ---")
+    start_time = time.time()
+    result1 = sync_task("G", 1.0)
+    result2 = sync_task("H", 1.0)
+    result3 = sync_task("I", 1.0)
+    end_time = time.time()
+    sync_time = end_time - start_time
+    print(f"동기 순차 실행 시간: {sync_time:.2f}초")
+
+    # 2. 비동기 함수로 동시 실행 (빠름)
+    print("\n--- 비동기 함수 동시 실행 ---")
+    start_time = time.time()
+    results = await asyncio.gather(
+        simple_task("J", 1.0), simple_task("K", 1.0), simple_task("L", 1.0)
+    )
+    end_time = time.time()
+    async_time = end_time - start_time
+    print(f"비동기 동시 실행 시간: {async_time:.2f}초")
+    print(f"결과들: {results}")
+
+    # 3. 성능 비교
+    speedup = sync_time / async_time if async_time > 0 else 0
+    print(f"\n🚀 비동기 동시 실행이 {speedup:.1f}배 빠릅니다!")
+    print(f"   시간 절약: {sync_time - async_time:.2f}초")
+
+
+async def main_data_fetching():
+    """데이터 페칭 시뮬레이션"""
+    print("\n=== 데이터 페칭 시뮬레이션 ===")
+
+    urls = [
+        "https://api.example.com/users",
+        "https://api.example.com/posts",
+        "https://api.example.com/comments",
+    ]
+
+    # 동시에 여러 API 호출
+    start_time = time.time()
+    tasks = [fetch_data(url, 1.0) for url in urls]
+    results = await asyncio.gather(*tasks)
+    end_time = time.time()
+
+    print(f"모든 데이터 페칭 완료: {end_time - start_time:.2f}초")
+    for result in results:
+        print(f"  - {result['url']}: {result['data']}")
+
+
+async def main_with_tasks():
+    """Task 객체를 사용한 예제"""
+    print("\n=== Task 객체 사용 예제 ===")
+
+    # Task 생성
+    task1 = asyncio.create_task(simple_task("Task1", 2.0))
+    task2 = asyncio.create_task(simple_task("Task2", 1.0))
+    task3 = asyncio.create_task(simple_task("Task3", 1.5))
+
+    # 모든 작업 완료 대기
+    results = await asyncio.gather(task1, task2, task3)
+    print(f"Task 결과들: {results}")
+
+
+async def main_with_timeout():
+    """타임아웃 처리 예제"""
+    print("\n=== 타임아웃 처리 예제 ===")
+
+    try:
+        # 2초 타임아웃으로 3초 작업 실행
+        result = await asyncio.wait_for(simple_task("Timeout", 3.0), timeout=2.0)
+        print(f"결과: {result}")
+    except asyncio.TimeoutError:
+        print("작업이 타임아웃되었습니다!")
+
+
+async def main_with_cancellation():
+    """작업 취소 예제"""
+    print("\n=== 작업 취소 예제 ===")
+
+    async def long_running_task():
+        try:
+            for i in range(10):
+                print(f"긴 작업 진행 중... {i+1}/10")
+                await asyncio.sleep(0.5)
+            return "긴 작업 완료"
+        except asyncio.CancelledError:
+            print("작업이 취소되었습니다!")
+            raise
+
+    # 2초 후 작업 취소
+    task = asyncio.create_task(long_running_task())
+    await asyncio.sleep(2.0)
+    task.cancel()
+
+    try:
+        result = await task
+        print(f"결과: {result}")
+    except asyncio.CancelledError:
+        print("작업이 성공적으로 취소되었습니다")
+
+
+if __name__ == "__main__":
+    print("asyncio 기초 학습을 시작합니다...\n")
+
+    # 모든 예제 실행
+    asyncio.run(main_basic())
+    asyncio.run(main_concurrent())
+    asyncio.run(main_data_fetching())
+    asyncio.run(main_with_tasks())
+    asyncio.run(main_with_timeout())
+    asyncio.run(main_with_cancellation())
+
+    print("\nasyncio 기초 학습이 완료되었습니다!")
+</file>
+
+<file path="02_websocket_basics.py">
+"""
+웹소켓 기초 예제
+웹소켓 서버와 클라이언트의 기본 사용법을 학습합니다.
+"""
+
+import asyncio
+import json
+import logging
+from typing import Dict, Set, Optional
+from datetime import datetime
+
+import websockets
+from websockets.server import WebSocketServerProtocol
+from websockets.exceptions import ConnectionClosed
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class WebSocketServer:
+    """웹소켓 서버 클래스"""
+
+    def __init__(self, host: str = "localhost", port: int = 8765):
+        self.host = host
+        self.port = port
+        self.clients: Set[WebSocketServerProtocol] = set()
+        self.message_count = 0
+
+    async def register_client(self, websocket: WebSocketServerProtocol) -> None:
+        """새 클라이언트 등록"""
+        self.clients.add(websocket)
+        logger.info(f"새 클라이언트 연결: {websocket.remote_address}")
+        logger.info(f"현재 연결된 클라이언트 수: {len(self.clients)}")
+
+    async def unregister_client(self, websocket: WebSocketServerProtocol) -> None:
+        """클라이언트 연결 해제"""
+        self.clients.discard(websocket)
+        logger.info(f"클라이언트 연결 해제: {websocket.remote_address}")
+        logger.info(f"현재 연결된 클라이언트 수: {len(self.clients)}")
+
+    async def broadcast_message(
+        self, message: str, sender: Optional[WebSocketServerProtocol] = None
+    ) -> None:
+        """모든 클라이언트에게 메시지 브로드캐스트"""
+        if not self.clients:
+            return
+
+        # 연결이 끊어진 클라이언트 제거
+        disconnected_clients = set()
+
+        for client in self.clients.copy():
+            try:
+                await client.send(message)
+            except ConnectionClosed:
+                disconnected_clients.add(client)
+
+        # 끊어진 연결 제거
+        for client in disconnected_clients:
+            await self.unregister_client(client)
+
+    async def handle_client(self, websocket: WebSocketServerProtocol) -> None:
+        """클라이언트 연결 처리"""
+        await self.register_client(websocket)
+
+        try:
+            async for message in websocket:
+                await self.process_message(websocket, message)
+        except ConnectionClosed:
+            logger.info("클라이언트 연결이 정상적으로 종료되었습니다")
+        except Exception as e:
+            logger.error(f"클라이언트 처리 중 오류 발생: {e}")
+        finally:
+            await self.unregister_client(websocket)
+
+    async def process_message(
+        self, websocket: WebSocketServerProtocol, message: str
+    ) -> None:
+        """메시지 처리"""
+        self.message_count += 1
+
+        try:
+            # JSON 메시지 파싱 시도
+            data = json.loads(message)
+            message_type = data.get("type", "unknown")
+
+            if message_type == "echo":
+                # 에코 메시지
+                response = {
+                    "type": "echo_response",
+                    "original_message": data.get("message", ""),
+                    "timestamp": datetime.now().isoformat(),
+                    "server_message_count": self.message_count,
+                }
+                await websocket.send(json.dumps(response))
+
+            elif message_type == "broadcast":
+                # 브로드캐스트 메시지
+                broadcast_data = {
+                    "type": "broadcast",
+                    "message": data.get("message", ""),
+                    "sender": str(websocket.remote_address),
+                    "timestamp": datetime.now().isoformat(),
+                }
+                await self.broadcast_message(json.dumps(broadcast_data), websocket)
+
+            elif message_type == "ping":
+                # 핑 메시지
+                pong_response = {
+                    "type": "pong",
+                    "timestamp": datetime.now().isoformat(),
+                }
+                await websocket.send(json.dumps(pong_response))
+
+            else:
+                # 알 수 없는 메시지 타입
+                error_response = {
+                    "type": "error",
+                    "message": f"알 수 없는 메시지 타입: {message_type}",
+                    "timestamp": datetime.now().isoformat(),
+                }
+                await websocket.send(json.dumps(error_response))
+
+        except json.JSONDecodeError:
+            # JSON이 아닌 일반 텍스트 메시지
+            response = (
+                f"서버가 받은 메시지: {message} (메시지 번호: {self.message_count})"
+            )
+            await websocket.send(response)
+
+    async def start_server(self) -> None:
+        """서버 시작"""
+        logger.info(f"웹소켓 서버 시작: ws://{self.host}:{self.port}")
+
+        async def handler(websocket):
+            await self.handle_client(websocket)
+
+        async with websockets.serve(
+            handler,
+            self.host,
+            self.port,
+            ping_interval=20,  # 20초마다 핑 전송
+            ping_timeout=10,  # 10초 내 핑 응답 없으면 연결 종료
+            close_timeout=10,  # 연결 종료 타임아웃
+        ):
+            logger.info("서버가 실행 중입니다. Ctrl+C로 종료하세요.")
+            await asyncio.Future()  # 서버를 계속 실행
+
+
+class WebSocketClient:
+    """웹소켓 클라이언트 클래스"""
+
+    def __init__(self, uri: str):
+        self.uri = uri
+        self.websocket: Optional[websockets.WebSocketServerProtocol] = None
+
+    async def connect(self) -> None:
+        """서버에 연결"""
+        try:
+            self.websocket = await websockets.connect(self.uri)
+            logger.info(f"서버에 연결됨: {self.uri}")
+        except Exception as e:
+            logger.error(f"서버 연결 실패: {e}")
+            raise
+
+    async def disconnect(self) -> None:
+        """서버 연결 해제"""
+        if self.websocket:
+            await self.websocket.close()
+            logger.info("서버 연결 해제")
+
+    async def send_message(self, message: str) -> None:
+        """메시지 전송"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        await self.websocket.send(message)
+        logger.info(f"메시지 전송: {message}")
+
+    async def send_json(self, data: dict) -> None:
+        """JSON 메시지 전송"""
+        message = json.dumps(data)
+        await self.send_message(message)
+
+    async def receive_message(self) -> str:
+        """메시지 수신"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message = await self.websocket.recv()
+        logger.info(f"메시지 수신: {message}")
+        return message
+
+    async def listen_for_messages(self) -> None:
+        """메시지 수신 대기"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        try:
+            async for message in self.websocket:
+                logger.info(f"수신된 메시지: {message}")
+        except ConnectionClosed:
+            logger.info("서버 연결이 종료되었습니다")
+        except Exception as e:
+            logger.error(f"메시지 수신 중 오류: {e}")
+
+
+async def demo_client_interactions():
+    """클라이언트 상호작용 데모"""
+    client = WebSocketClient("ws://localhost:8765")
+
+    try:
+        await client.connect()
+
+        # 1. 일반 텍스트 메시지 전송
+        await client.send_message("안녕하세요, 서버!")
+
+        # 2. JSON 메시지 전송 (에코)
+        echo_data = {"type": "echo", "message": "이 메시지를 에코해주세요"}
+        await client.send_json(echo_data)
+
+        # 3. 핑 메시지 전송
+        ping_data = {"type": "ping"}
+        await client.send_json(ping_data)
+
+        # 4. 브로드캐스트 메시지 전송
+        broadcast_data = {
+            "type": "broadcast",
+            "message": "모든 클라이언트에게 전송되는 메시지입니다",
+        }
+        await client.send_json(broadcast_data)
+
+        # 응답 수신
+        for _ in range(4):
+            try:
+                response = await asyncio.wait_for(client.receive_message(), timeout=2.0)
+                print(f"서버 응답: {response}")
+            except asyncio.TimeoutError:
+                print("응답 타임아웃")
+                break
+
+    except Exception as e:
+        logger.error(f"클라이언트 데모 오류: {e}")
+    finally:
+        await client.disconnect()
+
+
+async def demo_multiple_clients():
+    """여러 클라이언트 데모"""
+    clients = []
+
+    try:
+        # 3개의 클라이언트 생성
+        for i in range(3):
+            client = WebSocketClient(f"ws://localhost:8765")
+            await client.connect()
+            clients.append(client)
+
+            # 각 클라이언트가 브로드캐스트 메시지 전송
+            broadcast_data = {
+                "type": "broadcast",
+                "message": f"클라이언트 {i+1}에서 전송한 메시지",
+            }
+            await client.send_json(broadcast_data)
+
+            # 잠시 대기
+            await asyncio.sleep(0.5)
+
+        # 모든 클라이언트의 응답 수신
+        for client in clients:
+            try:
+                response = await asyncio.wait_for(client.receive_message(), timeout=1.0)
+                print(f"클라이언트 응답: {response}")
+            except asyncio.TimeoutError:
+                print("응답 타임아웃")
+
+    finally:
+        # 모든 클라이언트 연결 해제
+        for client in clients:
+            await client.disconnect()
+
+
+async def main():
+    """메인 함수"""
+    print("웹소켓 기초 학습을 시작합니다...\n")
+
+    # 서버 시작 (백그라운드)
+    server = WebSocketServer()
+    server_task = asyncio.create_task(server.start_server())
+
+    # 서버 시작 대기
+    await asyncio.sleep(1)
+
+    print("=== 단일 클라이언트 데모 ===")
+    await demo_client_interactions()
+
+    print("\n=== 여러 클라이언트 데모 ===")
+    await demo_multiple_clients()
+
+    # 서버 종료
+    server_task.cancel()
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
+
+    print("\n웹소켓 기초 학습이 완료되었습니다!")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+</file>
+
+<file path="03_realtime_chat.py">
+"""
+실시간 채팅 애플리케이션
+asyncio와 웹소켓을 결합한 실전 예제
+"""
+
+import asyncio
+import json
+import logging
+import uuid
+from datetime import datetime
+from typing import Dict, Set, Optional, List
+from dataclasses import dataclass, asdict
+from enum import Enum
+
+try:
+    import websockets
+    from websockets.server import WebSocketServerProtocol
+    from websockets.exceptions import ConnectionClosed
+except ImportError:
+    print("websockets 라이브러리가 설치되지 않았습니다.")
+    print("다음 명령어로 설치하세요: pip install websockets")
+    exit(1)
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class MessageType(Enum):
+    """메시지 타입 열거형"""
+
+    JOIN = "join"
+    LEAVE = "leave"
+    MESSAGE = "message"
+    USER_LIST = "user_list"
+    ERROR = "error"
+    HEARTBEAT = "heartbeat"
+
+
+@dataclass
+class User:
+    """사용자 정보"""
+
+    id: str
+    username: str
+    websocket: WebSocketServerProtocol
+    joined_at: datetime
+    last_activity: datetime
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "username": self.username,
+            "joined_at": self.joined_at.isoformat(),
+            "last_activity": self.last_activity.isoformat(),
+        }
+
+
+@dataclass
+class ChatMessage:
+    """채팅 메시지"""
+
+    id: str
+    user_id: str
+    username: str
+    message: str
+    timestamp: datetime
+    message_type: MessageType = MessageType.MESSAGE
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "username": self.username,
+            "message": self.message,
+            "timestamp": self.timestamp.isoformat(),
+            "type": self.message_type.value,
+        }
+
+
+class ChatRoom:
+    """채팅방 관리 클래스"""
+
+    def __init__(self, room_id: str = "general"):
+        self.room_id = room_id
+        self.users: Dict[str, User] = {}
+        self.message_history: List[ChatMessage] = []
+        self.max_history = 100  # 최대 메시지 히스토리 수
+
+    async def add_user(self, websocket: WebSocketServerProtocol, username: str) -> User:
+        """사용자 추가"""
+        user_id = str(uuid.uuid4())
+        now = datetime.now()
+
+        user = User(
+            id=user_id,
+            username=username,
+            websocket=websocket,
+            joined_at=now,
+            last_activity=now,
+        )
+
+        self.users[user_id] = user
+
+        # 입장 메시지 생성
+        join_message = ChatMessage(
+            id=str(uuid.uuid4()),
+            user_id="system",
+            username="System",
+            message=f"{username}님이 입장했습니다.",
+            timestamp=now,
+            message_type=MessageType.JOIN,
+        )
+
+        await self.broadcast_message(join_message)
+        await self.send_user_list()
+
+        logger.info(f"사용자 추가: {username} (ID: {user_id})")
+        return user
+
+    async def remove_user(self, user_id: str) -> None:
+        """사용자 제거"""
+        if user_id in self.users:
+            user = self.users[user_id]
+            del self.users[user_id]
+
+            # 퇴장 메시지 생성
+            leave_message = ChatMessage(
+                id=str(uuid.uuid4()),
+                user_id="system",
+                username="System",
+                message=f"{user.username}님이 퇴장했습니다.",
+                timestamp=datetime.now(),
+                message_type=MessageType.LEAVE,
+            )
+
+            await self.broadcast_message(leave_message)
+            await self.send_user_list()
+
+            logger.info(f"사용자 제거: {user.username} (ID: {user_id})")
+
+    async def send_message(self, user_id: str, message: str) -> None:
+        """메시지 전송"""
+        if user_id not in self.users:
+            return
+
+        user = self.users[user_id]
+        user.last_activity = datetime.now()
+
+        # 채팅 메시지 생성
+        chat_message = ChatMessage(
+            id=str(uuid.uuid4()),
+            user_id=user_id,
+            username=user.username,
+            message=message,
+            timestamp=datetime.now(),
+        )
+
+        # 메시지 히스토리에 추가
+        self.message_history.append(chat_message)
+        if len(self.message_history) > self.max_history:
+            self.message_history.pop(0)
+
+        # 모든 사용자에게 브로드캐스트
+        await self.broadcast_message(chat_message)
+
+    async def broadcast_message(self, message: ChatMessage) -> None:
+        """메시지 브로드캐스트"""
+        if not self.users:
+            return
+
+        message_data = json.dumps(message.to_dict())
+        disconnected_users = []
+
+        for user in self.users.values():
+            try:
+                await user.websocket.send(message_data)
+            except ConnectionClosed:
+                disconnected_users.append(user.id)
+            except Exception as e:
+                logger.error(f"메시지 전송 실패 (사용자: {user.username}): {e}")
+                disconnected_users.append(user.id)
+
+        # 연결이 끊어진 사용자들 제거
+        for user_id in disconnected_users:
+            await self.remove_user(user_id)
+
+    async def send_user_list(self) -> None:
+        """사용자 목록 전송"""
+        user_list_data = {
+            "type": MessageType.USER_LIST.value,
+            "users": [user.to_dict() for user in self.users.values()],
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        message_data = json.dumps(user_list_data)
+        disconnected_users = []
+
+        for user in self.users.values():
+            try:
+                await user.websocket.send(message_data)
+            except ConnectionClosed:
+                disconnected_users.append(user.id)
+            except Exception as e:
+                logger.error(f"사용자 목록 전송 실패 (사용자: {user.username}): {e}")
+                disconnected_users.append(user.id)
+
+        # 연결이 끊어진 사용자들 제거
+        for user_id in disconnected_users:
+            await self.remove_user(user_id)
+
+    async def send_message_history(self, user_id: str, limit: int = 20) -> None:
+        """메시지 히스토리 전송"""
+        if user_id not in self.users:
+            return
+
+        user = self.users[user_id]
+        recent_messages = self.message_history[-limit:] if self.message_history else []
+
+        history_data = {
+            "type": "message_history",
+            "messages": [msg.to_dict() for msg in recent_messages],
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        try:
+            await user.websocket.send(json.dumps(history_data))
+        except Exception as e:
+            logger.error(f"메시지 히스토리 전송 실패: {e}")
+
+    def get_room_stats(self) -> dict:
+        """채팅방 통계"""
+        return {
+            "room_id": self.room_id,
+            "user_count": len(self.users),
+            "message_count": len(self.message_history),
+            "users": [user.to_dict() for user in self.users.values()],
+        }
+
+
+class ChatServer:
+    """채팅 서버 클래스"""
+
+    def __init__(self, host: str = "localhost", port: int = 8765):
+        self.host = host
+        self.port = port
+        self.chat_room = ChatRoom()
+        self.heartbeat_interval = 30  # 30초마다 하트비트
+
+    async def handle_client(
+        self, websocket: WebSocketServerProtocol, path: str
+    ) -> None:
+        """클라이언트 연결 처리"""
+        user = None
+
+        try:
+            # 사용자명 요청
+            await websocket.send(
+                json.dumps(
+                    {"type": "request_username", "message": "사용자명을 입력하세요:"}
+                )
+            )
+
+            # 사용자명 수신
+            username_response = await websocket.recv()
+            username_data = json.loads(username_response)
+            username = username_data.get("username", f"User_{uuid.uuid4().hex[:8]}")
+
+            # 사용자 추가
+            user = await self.chat_room.add_user(websocket, username)
+
+            # 메시지 히스토리 전송
+            await self.chat_room.send_message_history(user.id, 20)
+
+            # 메시지 수신 루프
+            async for message in websocket:
+                await self.process_message(user, message)
+
+        except ConnectionClosed:
+            logger.info("클라이언트 연결이 정상적으로 종료되었습니다")
+        except Exception as e:
+            logger.error(f"클라이언트 처리 중 오류 발생: {e}")
+        finally:
+            if user:
+                await self.chat_room.remove_user(user.id)
+
+    async def process_message(self, user: User, message: str) -> None:
+        """메시지 처리"""
+        try:
+            data = json.loads(message)
+            message_type = data.get("type", "message")
+
+            if message_type == "chat_message":
+                # 채팅 메시지
+                chat_text = data.get("message", "").strip()
+                if chat_text:
+                    await self.chat_room.send_message(user.id, chat_text)
+
+            elif message_type == "heartbeat":
+                # 하트비트 응답
+                user.last_activity = datetime.now()
+                await user.websocket.send(
+                    json.dumps(
+                        {
+                            "type": "heartbeat_response",
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    )
+                )
+
+            elif message_type == "get_users":
+                # 사용자 목록 요청
+                await self.chat_room.send_user_list()
+
+            elif message_type == "get_history":
+                # 메시지 히스토리 요청
+                limit = data.get("limit", 20)
+                await self.chat_room.send_message_history(user.id, limit)
+
+            else:
+                # 알 수 없는 메시지 타입
+                await user.websocket.send(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": f"알 수 없는 메시지 타입: {message_type}",
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    )
+                )
+
+        except json.JSONDecodeError:
+            # JSON이 아닌 일반 텍스트 메시지
+            if message.strip():
+                await self.chat_room.send_message(user.id, message)
+        except Exception as e:
+            logger.error(f"메시지 처리 중 오류: {e}")
+
+    async def heartbeat_monitor(self) -> None:
+        """하트비트 모니터링"""
+        while True:
+            await asyncio.sleep(self.heartbeat_interval)
+
+            current_time = datetime.now()
+            inactive_users = []
+
+            # 비활성 사용자 확인
+            for user in self.chat_room.users.values():
+                time_diff = (current_time - user.last_activity).total_seconds()
+                if time_diff > self.heartbeat_interval * 2:  # 2배 시간 동안 비활성
+                    inactive_users.append(user.id)
+
+            # 비활성 사용자 제거
+            for user_id in inactive_users:
+                await self.chat_room.remove_user(user_id)
+                logger.info(f"비활성 사용자 제거: {user_id}")
+
+    async def start_server(self) -> None:
+        """서버 시작"""
+        logger.info(f"채팅 서버 시작: ws://{self.host}:{self.port}")
+
+        # 하트비트 모니터링 시작
+        heartbeat_task = asyncio.create_task(self.heartbeat_monitor())
+
+        try:
+            async with websockets.serve(
+                self.handle_client,
+                self.host,
+                self.port,
+                ping_interval=20,
+                ping_timeout=10,
+                close_timeout=10,
+            ):
+                logger.info("채팅 서버가 실행 중입니다. Ctrl+C로 종료하세요.")
+                await asyncio.Future()  # 서버를 계속 실행
+        finally:
+            heartbeat_task.cancel()
+
+
+class ChatClient:
+    """채팅 클라이언트 클래스"""
+
+    def __init__(self, uri: str, username: str):
+        self.uri = uri
+        self.username = username
+        self.websocket: Optional[websockets.WebSocketServerProtocol] = None
+        self.running = False
+
+    async def connect(self) -> None:
+        """서버에 연결"""
+        try:
+            self.websocket = await websockets.connect(self.uri)
+            self.running = True
+            logger.info(f"채팅 서버에 연결됨: {self.uri}")
+
+            # 사용자명 전송
+            await self.websocket.send(json.dumps({"username": self.username}))
+
+        except Exception as e:
+            logger.error(f"서버 연결 실패: {e}")
+            raise
+
+    async def disconnect(self) -> None:
+        """서버 연결 해제"""
+        self.running = False
+        if self.websocket:
+            await self.websocket.close()
+            logger.info("서버 연결 해제")
+
+    async def send_message(self, message: str) -> None:
+        """메시지 전송"""
+        if not self.websocket or not self.running:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message_data = {"type": "chat_message", "message": message}
+        await self.websocket.send(json.dumps(message_data))
+
+    async def listen_for_messages(self) -> None:
+        """메시지 수신 대기"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        try:
+            async for message in self.websocket:
+                if not self.running:
+                    break
+
+                try:
+                    data = json.loads(message)
+                    message_type = data.get("type", "unknown")
+
+                    if message_type == "request_username":
+                        # 사용자명 요청 (이미 연결 시 전송됨)
+                        continue
+                    elif message_type == "message_history":
+                        # 메시지 히스토리
+                        messages = data.get("messages", [])
+                        print(f"\n=== 최근 메시지 ({len(messages)}개) ===")
+                        for msg in messages:
+                            timestamp = datetime.fromisoformat(msg["timestamp"])
+                            print(
+                                f"[{timestamp.strftime('%H:%M:%S')}] {msg['username']}: {msg['message']}"
+                            )
+                        print("=== 현재 채팅 ===\n")
+                    elif message_type == "user_list":
+                        # 사용자 목록
+                        users = data.get("users", [])
+                        print(
+                            f"\n현재 접속자 ({len(users)}명): {', '.join([u['username'] for u in users])}\n"
+                        )
+                    elif message_type in ["join", "leave"]:
+                        # 입장/퇴장 메시지
+                        print(f"📢 {data.get('message', '')}")
+                    elif message_type == "error":
+                        # 오류 메시지
+                        print(f"❌ 오류: {data.get('message', '')}")
+                    else:
+                        # 일반 채팅 메시지
+                        timestamp = datetime.fromisoformat(data["timestamp"])
+                        print(
+                            f"[{timestamp.strftime('%H:%M:%S')}] {data['username']}: {data['message']}"
+                        )
+
+                except json.JSONDecodeError:
+                    # JSON이 아닌 일반 텍스트
+                    print(f"서버 메시지: {message}")
+
+        except ConnectionClosed:
+            logger.info("서버 연결이 종료되었습니다")
+        except Exception as e:
+            logger.error(f"메시지 수신 중 오류: {e}")
+
+    async def start_interactive_mode(self) -> None:
+        """대화형 모드 시작"""
+        print(f"채팅 클라이언트 시작 (사용자: {self.username})")
+        print("명령어: /users (사용자 목록), /history (메시지 히스토리), /quit (종료)")
+        print("-" * 50)
+
+        # 메시지 수신 태스크 시작
+        receive_task = asyncio.create_task(self.listen_for_messages())
+
+        try:
+            while self.running:
+                # 사용자 입력 받기
+                try:
+                    user_input = await asyncio.wait_for(
+                        asyncio.get_event_loop().run_in_executor(None, input),
+                        timeout=1.0,
+                    )
+
+                    if user_input.strip():
+                        if user_input.strip() == "/quit":
+                            break
+                        elif user_input.strip() == "/users":
+                            await self.websocket.send(json.dumps({"type": "get_users"}))
+                        elif user_input.strip() == "/history":
+                            await self.websocket.send(
+                                json.dumps({"type": "get_history", "limit": 10})
+                            )
+                        else:
+                            await self.send_message(user_input)
+
+                except asyncio.TimeoutError:
+                    # 타임아웃은 정상 (입력 대기 중)
+                    continue
+                except KeyboardInterrupt:
+                    break
+
+        finally:
+            self.running = False
+            receive_task.cancel()
+            try:
+                await receive_task
+            except asyncio.CancelledError:
+                pass
+
+
+async def demo_chat_server():
+    """채팅 서버 데모"""
+    server = ChatServer()
+    await server.start_server()
+
+
+async def demo_chat_client():
+    """채팅 클라이언트 데모"""
+    import random
+
+    username = f"User_{random.randint(1000, 9999)}"
+    client = ChatClient("ws://localhost:8765", username)
+
+    try:
+        await client.connect()
+        await client.start_interactive_mode()
+    finally:
+        await client.disconnect()
+
+
+async def main():
+    """메인 함수"""
+    print("실시간 채팅 애플리케이션 데모")
+    print("1. 서버 실행")
+    print("2. 클라이언트 실행")
+    print("3. 종료")
+
+    choice = input("선택하세요 (1-3): ").strip()
+
+    if choice == "1":
+        print("채팅 서버를 시작합니다...")
+        await demo_chat_server()
+    elif choice == "2":
+        print("채팅 클라이언트를 시작합니다...")
+        await demo_chat_client()
+    else:
+        print("프로그램을 종료합니다.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+</file>
+
+<file path="04_advanced_websocket.py">
+"""
+고급 웹소켓 애플리케이션
+실시간 데이터 스트리밍, 모니터링, 부하 분산 등 고급 기능 구현
+"""
+
+import asyncio
+import json
+import logging
+import random
+import time
+import uuid
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set, Any, Callable
+from dataclasses import dataclass, asdict
+from enum import Enum
+from collections import defaultdict, deque
+import statistics
+
+try:
+    import websockets
+    from websockets.server import WebSocketServerProtocol
+    from websockets.exceptions import ConnectionClosed
+except ImportError:
+    print("websockets 라이브러리가 설치되지 않았습니다.")
+    print("다음 명령어로 설치하세요: pip install websockets")
+    exit(1)
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class StreamType(Enum):
+    """스트림 타입"""
+
+    SENSOR_DATA = "sensor_data"
+    SYSTEM_METRICS = "system_metrics"
+    USER_ACTIVITY = "user_activity"
+    MARKET_DATA = "market_data"
+    LOG_EVENTS = "log_events"
+
+
+@dataclass
+class StreamData:
+    """스트림 데이터"""
+
+    id: str
+    stream_type: StreamType
+    data: Dict[str, Any]
+    timestamp: datetime
+    source: str
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "stream_type": self.stream_type.value,
+            "data": self.data,
+            "timestamp": self.timestamp.isoformat(),
+            "source": self.source,
+        }
+
+
+@dataclass
+class ClientSubscription:
+    """클라이언트 구독 정보"""
+
+    client_id: str
+    stream_types: Set[StreamType]
+    filters: Dict[str, Any]
+    last_activity: datetime
+
+
+class StreamProcessor:
+    """스트림 데이터 처리기"""
+
+    def __init__(self):
+        self.processors: Dict[StreamType, List[Callable]] = defaultdict(list)
+        self.aggregators: Dict[StreamType, deque] = defaultdict(
+            lambda: deque(maxlen=1000)
+        )
+
+    def register_processor(self, stream_type: StreamType, processor: Callable) -> None:
+        """스트림 처리기 등록"""
+        self.processors[stream_type].append(processor)
+
+    async def process_data(self, data: StreamData) -> StreamData:
+        """데이터 처리"""
+        # 데이터 집계
+        self.aggregators[data.stream_type].append(data)
+
+        # 등록된 처리기들 실행
+        for processor in self.processors[data.stream_type]:
+            try:
+                data = await processor(data)
+            except Exception as e:
+                logger.error(f"데이터 처리 중 오류: {e}")
+
+        return data
+
+    def get_aggregated_data(
+        self, stream_type: StreamType, window_size: int = 100
+    ) -> Dict[str, Any]:
+        """집계된 데이터 반환"""
+        data_points = list(self.aggregators[stream_type])[-window_size:]
+
+        if not data_points:
+            return {}
+
+        # 기본 통계 계산
+        if stream_type == StreamType.SENSOR_DATA:
+            values = [point.data.get("value", 0) for point in data_points]
+            return {
+                "count": len(values),
+                "mean": statistics.mean(values),
+                "min": min(values),
+                "max": max(values),
+                "std": statistics.stdev(values) if len(values) > 1 else 0,
+                "latest": values[-1] if values else None,
+            }
+        elif stream_type == StreamType.SYSTEM_METRICS:
+            cpu_values = [point.data.get("cpu_usage", 0) for point in data_points]
+            memory_values = [point.data.get("memory_usage", 0) for point in data_points]
+            return {
+                "cpu": {
+                    "mean": statistics.mean(cpu_values),
+                    "max": max(cpu_values),
+                    "current": cpu_values[-1] if cpu_values else None,
+                },
+                "memory": {
+                    "mean": statistics.mean(memory_values),
+                    "max": max(memory_values),
+                    "current": memory_values[-1] if memory_values else None,
+                },
+            }
+
+        return {"count": len(data_points)}
+
+
+class LoadBalancer:
+    """로드 밸런서"""
+
+    def __init__(self):
+        self.servers: Dict[str, Dict[str, Any]] = {}
+        self.server_weights: Dict[str, float] = {}
+        self.current_connections: Dict[str, int] = defaultdict(int)
+
+    def add_server(self, server_id: str, capacity: int, weight: float = 1.0) -> None:
+        """서버 추가"""
+        self.servers[server_id] = {
+            "capacity": capacity,
+            "weight": weight,
+            "status": "active",
+        }
+        self.server_weights[server_id] = weight
+
+    def get_best_server(self) -> Optional[str]:
+        """최적 서버 선택"""
+        available_servers = [
+            server_id
+            for server_id, server in self.servers.items()
+            if server["status"] == "active"
+            and self.current_connections[server_id] < server["capacity"]
+        ]
+
+        if not available_servers:
+            return None
+
+        # 가중치 기반 선택
+        total_weight = sum(
+            self.server_weights[server_id] for server_id in available_servers
+        )
+        if total_weight == 0:
+            return available_servers[0]
+
+        choice = random.uniform(0, total_weight)
+        current_weight = 0
+
+        for server_id in available_servers:
+            current_weight += self.server_weights[server_id]
+            if choice <= current_weight:
+                return server_id
+
+        return available_servers[-1]
+
+    def update_connections(self, server_id: str, delta: int) -> None:
+        """연결 수 업데이트"""
+        self.current_connections[server_id] += delta
+        self.current_connections[server_id] = max(
+            0, self.current_connections[server_id]
+        )
+
+
+class AdvancedWebSocketServer:
+    """고급 웹소켓 서버"""
+
+    def __init__(self, host: str = "localhost", port: int = 8765):
+        self.host = host
+        self.port = port
+        self.clients: Dict[str, WebSocketServerProtocol] = {}
+        self.subscriptions: Dict[str, ClientSubscription] = {}
+        self.stream_processor = StreamProcessor()
+        self.load_balancer = LoadBalancer()
+        self.metrics = {
+            "total_connections": 0,
+            "active_connections": 0,
+            "messages_sent": 0,
+            "messages_received": 0,
+            "start_time": datetime.now(),
+        }
+
+        # 스트림 생성기 등록
+        self._register_stream_generators()
+        self._register_data_processors()
+
+    def _register_stream_generators(self) -> None:
+        """스트림 생성기 등록"""
+        asyncio.create_task(self._generate_sensor_data())
+        asyncio.create_task(self._generate_system_metrics())
+        asyncio.create_task(self._generate_user_activity())
+        asyncio.create_task(self._generate_market_data())
+
+    def _register_data_processors(self) -> None:
+        """데이터 처리기 등록"""
+
+        # 센서 데이터 이상치 탐지
+        async def detect_anomalies(data: StreamData) -> StreamData:
+            if data.stream_type == StreamType.SENSOR_DATA:
+                value = data.data.get("value", 0)
+                aggregated = self.stream_processor.get_aggregated_data(
+                    StreamType.SENSOR_DATA
+                )
+
+                if aggregated and "mean" in aggregated and "std" in aggregated:
+                    mean = aggregated["mean"]
+                    std = aggregated["std"]
+
+                    if std > 0 and abs(value - mean) > 3 * std:  # 3시그마 규칙
+                        data.data["anomaly"] = True
+                        data.data["anomaly_score"] = abs(value - mean) / std
+                        logger.warning(
+                            f"이상치 탐지: {value} (평균: {mean:.2f}, 표준편차: {std:.2f})"
+                        )
+
+            return data
+
+        # 시스템 메트릭 임계값 체크
+        async def check_thresholds(data: StreamData) -> StreamData:
+            if data.stream_type == StreamType.SYSTEM_METRICS:
+                cpu = data.data.get("cpu_usage", 0)
+                memory = data.data.get("memory_usage", 0)
+
+                if cpu > 80:
+                    data.data["cpu_alert"] = True
+                    logger.warning(f"높은 CPU 사용률: {cpu}%")
+
+                if memory > 90:
+                    data.data["memory_alert"] = True
+                    logger.warning(f"높은 메모리 사용률: {memory}%")
+
+            return data
+
+        self.stream_processor.register_processor(
+            StreamType.SENSOR_DATA, detect_anomalies
+        )
+        self.stream_processor.register_processor(
+            StreamType.SYSTEM_METRICS, check_thresholds
+        )
+
+    async def _generate_sensor_data(self) -> None:
+        """센서 데이터 생성"""
+        while True:
+            await asyncio.sleep(1)  # 1초마다
+
+            data = StreamData(
+                id=str(uuid.uuid4()),
+                stream_type=StreamType.SENSOR_DATA,
+                data={
+                    "value": random.uniform(20, 30),  # 온도 센서
+                    "unit": "celsius",
+                    "location": random.choice(["room1", "room2", "room3"]),
+                },
+                timestamp=datetime.now(),
+                source="temperature_sensor",
+            )
+
+            await self._broadcast_stream_data(data)
+
+    async def _generate_system_metrics(self) -> None:
+        """시스템 메트릭 생성"""
+        while True:
+            await asyncio.sleep(2)  # 2초마다
+
+            data = StreamData(
+                id=str(uuid.uuid4()),
+                stream_type=StreamType.SYSTEM_METRICS,
+                data={
+                    "cpu_usage": random.uniform(10, 100),
+                    "memory_usage": random.uniform(30, 95),
+                    "disk_usage": random.uniform(20, 80),
+                    "network_io": random.uniform(0, 1000),
+                },
+                timestamp=datetime.now(),
+                source="system_monitor",
+            )
+
+            await self._broadcast_stream_data(data)
+
+    async def _generate_user_activity(self) -> None:
+        """사용자 활동 데이터 생성"""
+        while True:
+            await asyncio.sleep(5)  # 5초마다
+
+            data = StreamData(
+                id=str(uuid.uuid4()),
+                stream_type=StreamType.USER_ACTIVITY,
+                data={
+                    "user_id": f"user_{random.randint(1, 100)}",
+                    "action": random.choice(
+                        ["login", "logout", "page_view", "click", "purchase"]
+                    ),
+                    "page": random.choice(["/home", "/products", "/cart", "/checkout"]),
+                    "session_duration": random.uniform(0, 3600),
+                },
+                timestamp=datetime.now(),
+                source="user_tracker",
+            )
+
+            await self._broadcast_stream_data(data)
+
+    async def _generate_market_data(self) -> None:
+        """시장 데이터 생성"""
+        while True:
+            await asyncio.sleep(0.5)  # 0.5초마다
+
+            data = StreamData(
+                id=str(uuid.uuid4()),
+                stream_type=StreamType.MARKET_DATA,
+                data={
+                    "symbol": random.choice(["AAPL", "GOOGL", "MSFT", "TSLA"]),
+                    "price": random.uniform(100, 500),
+                    "volume": random.randint(1000, 10000),
+                    "change": random.uniform(-5, 5),
+                },
+                timestamp=datetime.now(),
+                source="market_feed",
+            )
+
+            await self._broadcast_stream_data(data)
+
+    async def _broadcast_stream_data(self, data: StreamData) -> None:
+        """스트림 데이터 브로드캐스트"""
+        # 데이터 처리
+        processed_data = await self.stream_processor.process_data(data)
+
+        # 구독자들에게 전송
+        for client_id, subscription in self.subscriptions.items():
+            if data.stream_type in subscription.stream_types:
+                if client_id in self.clients:
+                    try:
+                        message = json.dumps(processed_data.to_dict())
+                        await self.clients[client_id].send(message)
+                        self.metrics["messages_sent"] += 1
+                    except ConnectionClosed:
+                        await self._remove_client(client_id)
+                    except Exception as e:
+                        logger.error(f"메시지 전송 실패 (클라이언트: {client_id}): {e}")
+
+    async def handle_client(
+        self, websocket: WebSocketServerProtocol, path: str
+    ) -> None:
+        """클라이언트 연결 처리"""
+        client_id = str(uuid.uuid4())
+        self.clients[client_id] = websocket
+        self.metrics["total_connections"] += 1
+        self.metrics["active_connections"] += 1
+
+        logger.info(
+            f"새 클라이언트 연결: {client_id} (총 연결: {self.metrics['active_connections']})"
+        )
+
+        try:
+            async for message in websocket:
+                await self._process_client_message(client_id, message)
+        except ConnectionClosed:
+            logger.info(f"클라이언트 연결 종료: {client_id}")
+        except Exception as e:
+            logger.error(f"클라이언트 처리 중 오류 (클라이언트: {client_id}): {e}")
+        finally:
+            await self._remove_client(client_id)
+
+    async def _process_client_message(self, client_id: str, message: str) -> None:
+        """클라이언트 메시지 처리"""
+        self.metrics["messages_received"] += 1
+
+        try:
+            data = json.loads(message)
+            message_type = data.get("type", "unknown")
+
+            if message_type == "subscribe":
+                # 스트림 구독
+                stream_types = [StreamType(t) for t in data.get("stream_types", [])]
+                filters = data.get("filters", {})
+
+                self.subscriptions[client_id] = ClientSubscription(
+                    client_id=client_id,
+                    stream_types=set(stream_types),
+                    filters=filters,
+                    last_activity=datetime.now(),
+                )
+
+                await self._send_response(
+                    client_id,
+                    {
+                        "type": "subscription_confirmed",
+                        "stream_types": [t.value for t in stream_types],
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                )
+
+            elif message_type == "unsubscribe":
+                # 구독 해제
+                if client_id in self.subscriptions:
+                    del self.subscriptions[client_id]
+
+                await self._send_response(
+                    client_id,
+                    {
+                        "type": "unsubscription_confirmed",
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                )
+
+            elif message_type == "get_metrics":
+                # 서버 메트릭 요청
+                await self._send_response(
+                    client_id,
+                    {
+                        "type": "server_metrics",
+                        "metrics": self.metrics,
+                        "uptime": (
+                            datetime.now() - self.metrics["start_time"]
+                        ).total_seconds(),
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                )
+
+            elif message_type == "get_aggregated_data":
+                # 집계된 데이터 요청
+                stream_type = StreamType(data.get("stream_type", "sensor_data"))
+                window_size = data.get("window_size", 100)
+
+                aggregated = self.stream_processor.get_aggregated_data(
+                    stream_type, window_size
+                )
+
+                await self._send_response(
+                    client_id,
+                    {
+                        "type": "aggregated_data",
+                        "stream_type": stream_type.value,
+                        "data": aggregated,
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                )
+
+            elif message_type == "ping":
+                # 핑 응답
+                await self._send_response(
+                    client_id, {"type": "pong", "timestamp": datetime.now().isoformat()}
+                )
+
+            else:
+                # 알 수 없는 메시지 타입
+                await self._send_response(
+                    client_id,
+                    {
+                        "type": "error",
+                        "message": f"알 수 없는 메시지 타입: {message_type}",
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                )
+
+        except json.JSONDecodeError:
+            await self._send_response(
+                client_id,
+                {
+                    "type": "error",
+                    "message": "유효하지 않은 JSON 메시지",
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+        except Exception as e:
+            logger.error(f"메시지 처리 중 오류: {e}")
+            await self._send_response(
+                client_id,
+                {
+                    "type": "error",
+                    "message": f"서버 오류: {str(e)}",
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
+
+    async def _send_response(self, client_id: str, response: dict) -> None:
+        """클라이언트에게 응답 전송"""
+        if client_id in self.clients:
+            try:
+                await self.clients[client_id].send(json.dumps(response))
+                self.metrics["messages_sent"] += 1
+            except ConnectionClosed:
+                await self._remove_client(client_id)
+            except Exception as e:
+                logger.error(f"응답 전송 실패 (클라이언트: {client_id}): {e}")
+
+    async def _remove_client(self, client_id: str) -> None:
+        """클라이언트 제거"""
+        if client_id in self.clients:
+            del self.clients[client_id]
+            self.metrics["active_connections"] -= 1
+
+        if client_id in self.subscriptions:
+            del self.subscriptions[client_id]
+
+        logger.info(
+            f"클라이언트 제거: {client_id} (활성 연결: {self.metrics['active_connections']})"
+        )
+
+    async def start_server(self) -> None:
+        """서버 시작"""
+        logger.info(f"고급 웹소켓 서버 시작: ws://{self.host}:{self.port}")
+
+        async with websockets.serve(
+            self.handle_client,
+            self.host,
+            self.port,
+            ping_interval=30,
+            ping_timeout=10,
+            close_timeout=10,
+        ):
+            logger.info("서버가 실행 중입니다. Ctrl+C로 종료하세요.")
+            await asyncio.Future()
+
+
+class AdvancedWebSocketClient:
+    """고급 웹소켓 클라이언트"""
+
+    def __init__(self, uri: str, client_name: str = "AdvancedClient"):
+        self.uri = uri
+        self.client_name = client_name
+        self.websocket: Optional[websockets.WebSocketServerProtocol] = None
+        self.running = False
+        self.subscriptions: Set[StreamType] = set()
+
+    async def connect(self) -> None:
+        """서버에 연결"""
+        try:
+            self.websocket = await websockets.connect(self.uri)
+            self.running = True
+            logger.info(f"서버에 연결됨: {self.uri}")
+        except Exception as e:
+            logger.error(f"서버 연결 실패: {e}")
+            raise
+
+    async def disconnect(self) -> None:
+        """서버 연결 해제"""
+        self.running = False
+        if self.websocket:
+            await self.websocket.close()
+            logger.info("서버 연결 해제")
+
+    async def subscribe(
+        self, stream_types: List[StreamType], filters: Dict[str, Any] = None
+    ) -> None:
+        """스트림 구독"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message = {
+            "type": "subscribe",
+            "stream_types": [t.value for t in stream_types],
+            "filters": filters or {},
+        }
+
+        await self.websocket.send(json.dumps(message))
+        self.subscriptions.update(stream_types)
+        logger.info(f"구독 요청: {[t.value for t in stream_types]}")
+
+    async def unsubscribe(self) -> None:
+        """구독 해제"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message = {"type": "unsubscribe"}
+        await self.websocket.send(json.dumps(message))
+        self.subscriptions.clear()
+        logger.info("구독 해제")
+
+    async def get_server_metrics(self) -> None:
+        """서버 메트릭 요청"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message = {"type": "get_metrics"}
+        await self.websocket.send(json.dumps(message))
+
+    async def get_aggregated_data(
+        self, stream_type: StreamType, window_size: int = 100
+    ) -> None:
+        """집계된 데이터 요청"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        message = {
+            "type": "get_aggregated_data",
+            "stream_type": stream_type.value,
+            "window_size": window_size,
+        }
+        await self.websocket.send(json.dumps(message))
+
+    async def listen_for_messages(self) -> None:
+        """메시지 수신 대기"""
+        if not self.websocket:
+            raise RuntimeError("서버에 연결되지 않았습니다")
+
+        try:
+            async for message in self.websocket:
+                if not self.running:
+                    break
+
+                try:
+                    data = json.loads(message)
+                    await self._handle_message(data)
+                except json.JSONDecodeError:
+                    logger.info(f"수신된 메시지: {message}")
+
+        except ConnectionClosed:
+            logger.info("서버 연결이 종료되었습니다")
+        except Exception as e:
+            logger.error(f"메시지 수신 중 오류: {e}")
+
+    async def _handle_message(self, data: dict) -> None:
+        """메시지 처리"""
+        message_type = data.get("type", "unknown")
+
+        if message_type == "subscription_confirmed":
+            logger.info(f"구독 확인: {data.get('stream_types', [])}")
+
+        elif message_type == "server_metrics":
+            metrics = data.get("metrics", {})
+            uptime = data.get("uptime", 0)
+            print(f"\n=== 서버 메트릭 ===")
+            print(f"활성 연결: {metrics.get('active_connections', 0)}")
+            print(f"총 연결: {metrics.get('total_connections', 0)}")
+            print(f"전송된 메시지: {metrics.get('messages_sent', 0)}")
+            print(f"수신된 메시지: {metrics.get('messages_received', 0)}")
+            print(f"업타임: {uptime:.2f}초")
+            print("=" * 20)
+
+        elif message_type == "aggregated_data":
+            stream_type = data.get("stream_type", "unknown")
+            aggregated_data = data.get("data", {})
+            print(f"\n=== {stream_type} 집계 데이터 ===")
+            for key, value in aggregated_data.items():
+                if isinstance(value, dict):
+                    print(f"{key}:")
+                    for sub_key, sub_value in value.items():
+                        print(f"  {sub_key}: {sub_value}")
+                else:
+                    print(f"{key}: {value}")
+            print("=" * 30)
+
+        elif message_type in [
+            "sensor_data",
+            "system_metrics",
+            "user_activity",
+            "market_data",
+        ]:
+            # 스트림 데이터 출력
+            timestamp = datetime.fromisoformat(data["timestamp"])
+            source = data.get("source", "unknown")
+
+            print(f"[{timestamp.strftime('%H:%M:%S')}] {message_type} from {source}")
+
+            # 특별한 데이터 표시
+            if "anomaly" in data.get("data", {}):
+                print("🚨 이상치 탐지!")
+            if "cpu_alert" in data.get("data", {}):
+                print("⚠️ CPU 경고!")
+            if "memory_alert" in data.get("data", {}):
+                print("⚠️ 메모리 경고!")
+
+        else:
+            logger.info(f"수신된 메시지: {data}")
+
+
+async def demo_advanced_server():
+    """고급 서버 데모"""
+    server = AdvancedWebSocketServer()
+    await server.start_server()
+
+
+async def demo_advanced_client():
+    """고급 클라이언트 데모"""
+    client = AdvancedWebSocketClient("ws://localhost:8765", "DemoClient")
+
+    try:
+        await client.connect()
+
+        # 센서 데이터와 시스템 메트릭 구독
+        await client.subscribe([StreamType.SENSOR_DATA, StreamType.SYSTEM_METRICS])
+
+        # 서버 메트릭 요청
+        await client.get_server_metrics()
+
+        # 메시지 수신 시작
+        await client.listen_for_messages()
+
+    except KeyboardInterrupt:
+        logger.info("클라이언트 종료")
+    finally:
+        await client.disconnect()
+
+
+async def demo_data_analysis():
+    """데이터 분석 데모"""
+    client = AdvancedWebSocketClient("ws://localhost:8765", "AnalysisClient")
+
+    try:
+        await client.connect()
+
+        # 모든 스트림 구독
+        await client.subscribe(
+            [
+                StreamType.SENSOR_DATA,
+                StreamType.SYSTEM_METRICS,
+                StreamType.USER_ACTIVITY,
+                StreamType.MARKET_DATA,
+            ]
+        )
+
+        # 주기적으로 집계 데이터 요청
+        async def periodic_analysis():
+            while True:
+                await asyncio.sleep(10)  # 10초마다
+                print("\n=== 데이터 분석 ===")
+                await client.get_aggregated_data(StreamType.SENSOR_DATA, 50)
+                await client.get_aggregated_data(StreamType.SYSTEM_METRICS, 50)
+                await client.get_server_metrics()
+
+        # 분석 태스크와 메시지 수신을 동시에 실행
+        analysis_task = asyncio.create_task(periodic_analysis())
+
+        try:
+            await client.listen_for_messages()
+        finally:
+            analysis_task.cancel()
+            try:
+                await analysis_task
+            except asyncio.CancelledError:
+                pass
+
+    except KeyboardInterrupt:
+        logger.info("분석 클라이언트 종료")
+    finally:
+        await client.disconnect()
+
+
+async def main():
+    """메인 함수"""
+    print("고급 웹소켓 애플리케이션 데모")
+    print("1. 서버 실행")
+    print("2. 기본 클라이언트 실행")
+    print("3. 데이터 분석 클라이언트 실행")
+    print("4. 종료")
+
+    choice = input("선택하세요 (1-4): ").strip()
+
+    if choice == "1":
+        print("고급 웹소켓 서버를 시작합니다...")
+        await demo_advanced_server()
+    elif choice == "2":
+        print("기본 클라이언트를 시작합니다...")
+        await demo_advanced_client()
+    elif choice == "3":
+        print("데이터 분석 클라이언트를 시작합니다...")
+        await demo_data_analysis()
+    else:
+        print("프로그램을 종료합니다.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+</file>
+
+<file path="package.json">
+{}
+</file>
+
+<file path="quick_websocket_test.py">
+#!/usr/bin/env python3
+"""
+빠른 웹소켓 테스트 - 원본 코드 사용
+"""
+import asyncio
+from websockets_test import test_websocket
+
+
+async def main():
+    # 서버 시작
+    from websocket_basics import WebSocketServer
+
+    server = WebSocketServer()
+    server_task = asyncio.create_task(server.start_server())
+
+    # 잠시 대기 후 테스트
+    await asyncio.sleep(1)
+
+    # 간단한 클라이언트 테스트
+    import websockets
+    import json
+
+    try:
+        async with websockets.connect("ws://localhost:8765") as websocket:
+            print("✅ 연결 성공")
+
+            # 텍스트 메시지
+            await websocket.send("Hello Server!")
+            response = await websocket.recv()
+            print(f"응답: {response}")
+
+            # JSON 메시지
+            await websocket.send(json.dumps({"type": "ping"}))
+            response = await websocket.recv()
+            print(f"핑 응답: {response}")
+
+            print("✅ 웹소켓 기본 기능 정상 작동!")
+
+    except Exception as e:
+        print(f"❌ 오류: {e}")
+
+    # 서버 종료
+    server_task.cancel()
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+</file>
+
+<file path="README.md">
+# asyncio와 웹소켓 기초부터 고급까지
+
+이 프로젝트는 Python의 asyncio와 웹소켓을 사용한 비동기 프로그래밍을 단계적으로 학습할 수 있도록 구성되었습니다.
+
+## 📚 학습 순서
+
+### 1. asyncio 기초 (`01_asyncio_basics.py`)
+
+- 비동기 프로그래밍의 기본 개념
+- 코루틴, 이벤트 루프, Task 객체
+- 동시 실행과 순차 실행의 차이
+- 타임아웃과 작업 취소
+
+### 2. 웹소켓 기초 (`02_websocket_basics.py`)
+
+- 웹소켓 서버와 클라이언트 구현
+- 메시지 브로드캐스트
+- 연결 관리와 오류 처리
+- JSON 메시지 처리
+
+### 3. 실시간 채팅 애플리케이션 (`03_realtime_chat.py`)
+
+- asyncio와 웹소켓을 결합한 실전 예제
+- 사용자 관리와 메시지 히스토리
+- 하트비트 모니터링
+- 대화형 클라이언트
+
+### 4. 고급 웹소켓 애플리케이션 (`04_advanced_websocket.py`)
+
+- 실시간 데이터 스트리밍
+- 데이터 처리와 집계
+- 이상치 탐지와 임계값 모니터링
+- 서버 메트릭과 부하 관리
+
+## 🚀 설치 및 실행
+
+### 1. 의존성 설치
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. 예제 실행
+
+#### asyncio 기초 학습
+
+```bash
+python 01_asyncio_basics.py
+```
+
+#### 웹소켓 기초 학습
+
+```bash
+python 02_websocket_basics.py
+```
+
+#### 실시간 채팅 (서버)
+
+```bash
+python 03_realtime_chat.py
+# 선택: 1 (서버 실행)
+```
+
+#### 실시간 채팅 (클라이언트)
+
+```bash
+python 03_realtime_chat.py
+# 선택: 2 (클라이언트 실행)
+```
+
+#### 고급 웹소켓 (서버)
+
+```bash
+python 04_advanced_websocket.py
+# 선택: 1 (서버 실행)
+```
+
+#### 고급 웹소켓 (클라이언트)
+
+```bash
+python 04_advanced_websocket.py
+# 선택: 2 (기본 클라이언트) 또는 3 (분석 클라이언트)
+```
+
+## 📖 주요 개념
+
+### asyncio 핵심 개념
+
+- **Coroutine**: `async def`로 정의된 비동기 함수
+- **Event Loop**: 비동기 작업들을 관리하는 루프
+- **await**: 다른 코루틴의 완료를 기다림
+- **Task**: 실행 중인 코루틴을 관리하는 객체
+
+### 웹소켓 핵심 개념
+
+- **Handshake**: 클라이언트와 서버 간 연결 설정
+- **Frame**: 데이터 전송의 기본 단위
+- **Ping/Pong**: 연결 상태 확인 메커니즘
+- **Close**: 연결 종료 프로세스
+
+### 실무 활용 패턴
+
+- **Connection Pooling**: 연결 재사용으로 성능 최적화
+- **Message Queuing**: 메시지 순서 보장과 배치 처리
+- **Load Balancing**: 여러 서버 간 부하 분산
+- **Monitoring**: 실시간 메트릭 수집과 알림
+
+## 🔧 고급 기능
+
+### 1. 실시간 데이터 스트리밍
+
+- 센서 데이터, 시스템 메트릭, 사용자 활동 등 다양한 데이터 소스
+- 실시간 처리와 집계
+- 이상치 탐지와 임계값 모니터링
+
+### 2. 연결 관리
+
+- 자동 재연결
+- 하트비트 모니터링
+- 연결 풀 관리
+
+### 3. 성능 최적화
+
+- 비동기 I/O 활용
+- 메시지 배치 처리
+- 메모리 효율적인 데이터 구조
+
+### 4. 오류 처리
+
+- 연결 끊김 감지
+- 자동 재시도
+- 우아한 서비스 중단
+
+## 🎯 실무 적용 사례
+
+### 1. 실시간 채팅 시스템
+
+- 다중 사용자 지원
+- 메시지 히스토리
+- 사용자 상태 관리
+
+### 2. IoT 데이터 수집
+
+- 센서 데이터 실시간 수집
+- 데이터 전처리와 필터링
+- 이상 상황 알림
+
+### 3. 금융 데이터 스트리밍
+
+- 실시간 시장 데이터
+- 고빈도 거래 처리
+- 위험 관리
+
+### 4. 시스템 모니터링
+
+- 서버 성능 메트릭
+- 로그 스트리밍
+- 알림 시스템
+
+## 📝 학습 팁
+
+1. **단계별 학습**: 각 파일을 순서대로 실행해보세요
+2. **코드 수정**: 예제 코드를 수정하며 실험해보세요
+3. **디버깅**: 로그를 통해 비동기 작업의 흐름을 파악하세요
+4. **성능 측정**: 시간 측정을 통해 동기/비동기의 차이를 확인하세요
+
+## 🐛 문제 해결
+
+### 일반적인 문제들
+
+1. **ImportError: No module named 'websockets'**
+
+   ```bash
+   pip install websockets
+   ```
+
+2. **연결 거부 오류**
+
+   - 서버가 실행 중인지 확인
+   - 포트 번호가 올바른지 확인
+
+3. **메모리 사용량 증가**
+   - 연결이 제대로 해제되는지 확인
+   - 메시지 히스토리 크기 제한
+
+## 📚 추가 학습 자료
+
+- [Python asyncio 공식 문서](https://docs.python.org/3/library/asyncio.html)
+- [WebSocket RFC 6455](https://tools.ietf.org/html/rfc6455)
+- [websockets 라이브러리 문서](https://websockets.readthedocs.io/)
+
+## 🤝 기여하기
+
+이 프로젝트에 기여하고 싶으시다면:
+
+1. 이슈를 생성하여 개선 사항을 제안하세요
+2. 풀 리퀘스트를 통해 코드 개선을 제안하세요
+3. 새로운 예제나 사용 사례를 추가하세요
+
+---
+
+**Happy Coding! 🚀**
+</file>
+
+<file path="requirements.txt">
+websockets>=11.0.0
+asyncio
+</file>
+
+<file path="simple_websocket_test.py">
+#!/usr/bin/env python3
+"""
+간단한 웹소켓 서버 테스트
+"""
+import asyncio
+import websockets
+import json
+from datetime import datetime
+
+
+class SimpleWebSocketServer:
+    def __init__(self):
+        self.clients = set()
+
+    async def handle_client(self, websocket):
+        """클라이언트 연결 처리"""
+        self.clients.add(websocket)
+        print(f"클라이언트 연결: {websocket.remote_address}")
+
+        try:
+            async for message in websocket:
+                print(f"받은 메시지: {message}")
+
+                try:
+                    data = json.loads(message)
+                    if data.get("type") == "ping":
+                        response = {
+                            "type": "pong",
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                        await websocket.send(json.dumps(response))
+                    else:
+                        await websocket.send(f"에코: {message}")
+                except json.JSONDecodeError:
+                    await websocket.send(f"에코: {message}")
+
+        except websockets.exceptions.ConnectionClosed:
+            print("클라이언트 연결 종료")
+        finally:
+            self.clients.discard(websocket)
+
+    async def start_server(self):
+        """서버 시작"""
+        print("웹소켓 서버 시작: ws://localhost:8765")
+
+        async with websockets.serve(self.handle_client, "localhost", 8765):
+            print("서버 실행 중...")
+            await asyncio.Future()  # 무한 대기
+
+
+async def test_client():
+    """클라이언트 테스트"""
+    await asyncio.sleep(1)  # 서버 시작 대기
+
+    try:
+        async with websockets.connect("ws://localhost:8765") as websocket:
+            print("✅ 클라이언트 연결 성공")
+
+            # 텍스트 메시지
+            await websocket.send("Hello!")
+            response = await websocket.recv()
+            print(f"응답: {response}")
+
+            # JSON 메시지
+            await websocket.send(json.dumps({"type": "ping"}))
+            response = await websocket.recv()
+            print(f"핑 응답: {response}")
+
+            print("✅ 테스트 완료")
+
+    except Exception as e:
+        print(f"❌ 클라이언트 오류: {e}")
+
+
+async def main():
+    """메인 함수"""
+    server = SimpleWebSocketServer()
+
+    # 서버와 클라이언트를 동시에 실행
+    server_task = asyncio.create_task(server.start_server())
+    client_task = asyncio.create_task(test_client())
+
+    # 클라이언트 테스트 완료 후 서버 종료
+    await client_task
+    server_task.cancel()
+
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
+
+    print("테스트 완료!")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+</file>
+
+<file path="test_websocket.py">
+#!/usr/bin/env python3
+"""
+웹소켓 서버 테스트
+"""
+import asyncio
+import websockets
+import json
+
+
+async def test_websocket():
+    """웹소켓 서버 테스트"""
+    try:
+        # 서버에 연결
+        uri = "ws://localhost:8765"
+        async with websockets.connect(uri) as websocket:
+            print("✅ 서버 연결 성공")
+
+            # 텍스트 메시지 전송
+            await websocket.send("Hello Server!")
+            response = await websocket.recv()
+            print(f"서버 응답: {response}")
+
+            # JSON 메시지 전송
+            ping_data = {"type": "ping"}
+            await websocket.send(json.dumps(ping_data))
+            response = await websocket.recv()
+            print(f"핑 응답: {response}")
+
+            print("✅ 웹소켓 테스트 완료")
+
+    except Exception as e:
+        print(f"❌ 테스트 실패: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(test_websocket())
+</file>
+
+</files>
