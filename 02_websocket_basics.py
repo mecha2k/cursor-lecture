@@ -291,15 +291,25 @@ async def main():
     print("=== 단일 클라이언트 데모 ===")
     await demo_client_interactions()
 
-    # print("\n=== 여러 클라이언트 데모 ===")
-    # await demo_multiple_clients()
+    print("\n=== 여러 클라이언트 데모 ===")
+    await demo_multiple_clients()
 
-    # 서버 종료
+    print("✅ 클라이언트 테스트 완료")
+
+    # 여기서 await server_task를 하지 않으면?
+    print("⚠️  main() 함수가 끝나려고 함...")
+
+    # 서버 정상 종료
+    print("🛑 서버 종료 시작")
     server_task.cancel()
+
     try:
-        await server_task
+        await server_task  # ← 이 부분이 중요!
+        print("✅ 서버 종료 완료")
     except asyncio.CancelledError:
-        pass
+        print("✅ 서버가 정상적으로 종료됨")
+
+    print("🏁 프로그램 종료")
 
     print("\n웹소켓 기초 학습이 완료되었습니다!")
 
