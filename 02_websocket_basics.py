@@ -6,11 +6,10 @@
 import asyncio
 import json
 import logging
-from typing import Dict, Set, Optional
+from typing import Dict, Set, Optional, Any
 from datetime import datetime
 
 import websockets
-from websockets.server import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 
 # 로깅 설정
@@ -24,23 +23,23 @@ class WebSocketServer:
     def __init__(self, host: str = "localhost", port: int = 8765):
         self.host = host
         self.port = port
-        self.clients: Set[WebSocketServerProtocol] = set()
+        self.clients: Set[Any] = set()
         self.message_count = 0
 
-    async def register_client(self, websocket: WebSocketServerProtocol) -> None:
+    async def register_client(self, websocket: Any) -> None:
         """새 클라이언트 등록"""
         self.clients.add(websocket)
         logger.info(f"새 클라이언트 연결: {websocket.remote_address}")
         logger.info(f"현재 연결된 클라이언트 수: {len(self.clients)}")
 
-    async def unregister_client(self, websocket: WebSocketServerProtocol) -> None:
+    async def unregister_client(self, websocket: Any) -> None:
         """클라이언트 연결 해제"""
         self.clients.discard(websocket)
         logger.info(f"클라이언트 연결 해제: {websocket.remote_address}")
         logger.info(f"현재 연결된 클라이언트 수: {len(self.clients)}")
 
     async def broadcast_message(
-        self, message: str, sender: Optional[WebSocketServerProtocol] = None
+        self, message: str, sender: Optional[Any] = None
     ) -> None:
         """모든 클라이언트에게 메시지 브로드캐스트"""
         if not self.clients:
@@ -59,7 +58,7 @@ class WebSocketServer:
         for client in disconnected_clients:
             await self.unregister_client(client)
 
-    async def handle_client(self, websocket: WebSocketServerProtocol) -> None:
+    async def handle_client(self, websocket: Any) -> None:
         """클라이언트 연결 처리"""
         await self.register_client(websocket)
 
@@ -73,9 +72,7 @@ class WebSocketServer:
         finally:
             await self.unregister_client(websocket)
 
-    async def process_message(
-        self, websocket: WebSocketServerProtocol, message: str
-    ) -> None:
+    async def process_message(self, websocket: Any, message: str) -> None:
         """메시지 처리"""
         self.message_count += 1
 
@@ -152,7 +149,7 @@ class WebSocketClient:
 
     def __init__(self, uri: str):
         self.uri = uri
-        self.websocket: Optional[websockets.WebSocketServerProtocol] = None
+        self.websocket: Optional[Any] = None
 
     async def connect(self) -> None:
         """서버에 연결"""
