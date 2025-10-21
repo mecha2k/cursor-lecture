@@ -57,6 +57,55 @@
 - 클라우드 저장소 암호화
 - 실시간 스트리밍 암호화
 
+### 8. FastAPI 기초 (`06_fastapi_basics.py`)
+
+- FastAPI 기본 개념과 설정
+- Pydantic 모델과 타입 검증
+- 경로 매개변수와 쿼리 매개변수
+- 요청/응답 모델
+- 에러 핸들링
+- 파일 업로드
+- 비동기 작업
+
+### 9. FastAPI 고급 기능 (`06_fastapi_advanced.py`)
+
+- 의존성 주입 (Dependency Injection)
+- 커스텀 미들웨어
+- 백그라운드 작업
+- 웹소켓 지원
+- 캐싱 시스템
+- 성능 모니터링
+
+### 10. FastAPI 데이터베이스 연동 (`06_fastapi_database.py`)
+
+- SQLAlchemy ORM
+- 비동기 데이터베이스 작업
+- SQLite, PostgreSQL, MySQL 지원
+- MongoDB (NoSQL) 연동
+- Redis 캐시 연동
+- 데이터베이스 마이그레이션
+
+### 11. FastAPI 인증 및 보안 (`06_fastapi_auth_security.py`)
+
+- JWT 토큰 인증
+- OAuth2 인증
+- 비밀번호 해싱
+- 세션 관리
+- API 키 인증
+- CORS 설정
+- 요청 제한
+- 보안 헤더
+
+### 12. FastAPI 배포 및 운영 (`06_fastapi_deployment.py`)
+
+- Docker 컨테이너화
+- Kubernetes 배포
+- AWS/Google Cloud/Azure 배포
+- Nginx 리버스 프록시
+- 모니터링 및 로깅
+- 헬스 체크
+- 성능 메트릭
+
 ## 🚀 설치 및 실행
 
 ### 1. 의존성 설치
@@ -123,6 +172,36 @@ python 05_aes_security_guide.py
 
 ```bash
 python 05_aes_advanced_examples.py
+```
+
+#### FastAPI 기초 학습
+
+```bash
+python 06_fastapi_basics.py
+```
+
+#### FastAPI 고급 기능 학습
+
+```bash
+python 06_fastapi_advanced.py
+```
+
+#### FastAPI 데이터베이스 연동 학습
+
+```bash
+python 06_fastapi_database.py
+```
+
+#### FastAPI 인증 및 보안 학습
+
+```bash
+python 06_fastapi_auth_security.py
+```
+
+#### FastAPI 배포 및 운영 학습
+
+```bash
+python 06_fastapi_deployment.py
 ```
 
 ## 📖 주요 개념
@@ -207,6 +286,16 @@ python 05_aes_advanced_examples.py
 - 네트워크 통신 보안
 - 클라우드 저장소 암호화
 
+### 6. 웹 API 개발
+
+- RESTful API 설계
+- 자동 문서 생성
+- 타입 안전성
+- 비동기 처리
+- 인증 및 보안
+- 데이터베이스 연동
+- 배포 및 운영
+
 ## 📝 학습 팁
 
 1. **단계별 학습**: 각 파일을 순서대로 실행해보세요
@@ -241,8 +330,20 @@ python 05_aes_advanced_examples.py
    ```
 
 5. **키 관리 오류**
+
    - 키 길이가 올바른지 확인 (128, 192, 256비트)
    - IV(초기화 벡터)가 매번 새로 생성되는지 확인
+
+6. **FastAPI 관련 오류**
+
+   ```bash
+   pip install fastapi uvicorn
+   ```
+
+7. **데이터베이스 연결 오류**
+   - 데이터베이스 서버가 실행 중인지 확인
+   - 연결 문자열이 올바른지 확인
+   - 필요한 드라이버가 설치되었는지 확인
 
 ## 📚 추가 학습 자료
 
@@ -252,6 +353,12 @@ python 05_aes_advanced_examples.py
 - [cryptography 라이브러리 문서](https://cryptography.io/)
 - [AES 암호화 표준 (NIST)](https://csrc.nist.gov/publications/detail/fips/197/final)
 - [PBKDF2 키 유도 함수](https://tools.ietf.org/html/rfc2898)
+- [FastAPI 공식 문서](https://fastapi.tiangolo.com/)
+- [SQLAlchemy 공식 문서](https://docs.sqlalchemy.org/)
+- [Pydantic 공식 문서](https://docs.pydantic.dev/)
+- [Uvicorn 공식 문서](https://www.uvicorn.org/)
+- [Docker 공식 문서](https://docs.docker.com/)
+- [Kubernetes 공식 문서](https://kubernetes.io/docs/)
 
 ## 🤝 기여하기
 
