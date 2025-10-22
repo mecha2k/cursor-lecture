@@ -1,3 +1,4 @@
+# Python 3.10+ required
 websockets>=11.0.0
 asyncio
 cryptography>=41.0.0

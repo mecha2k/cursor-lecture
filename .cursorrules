@@ -1,0 +1,201 @@
+# Cursor Rules for FastAPI Python 3.10 Project
+
+## 🐍 Python 3.10+ Requirements
+
+### **MANDATORY: Python Version**
+
+- **ALWAYS** use Python 3.10 or higher
+- **ALWAYS** use modern Python syntax and features
+- **NEVER** use deprecated Python 2.x patterns
+
+### **MANDATORY: Type Hints**
+
+- **ALWAYS** use `|` operator for union types instead of `Union[]`
+- **ALWAYS** use `list[str]` instead of `List[str]`
+- **ALWAYS** use `dict[str, Any]` instead of `Dict[str, Any]`
+- **ALWAYS** use `Optional[str]` or `str | None` for nullable types
+- **NEVER** use `typing.List`, `typing.Dict`, `typing.Union` in new code
+
+### **MANDATORY: Modern Python Features**
+
+- **ALWAYS** use `match-case` statements for pattern matching
+- **ALWAYS** use f-strings for string formatting
+- **ALWAYS** use `pathlib.Path` instead of `os.path`
+- **ALWAYS** use `dataclasses` for simple data containers
+- **ALWAYS** use `contextlib.asynccontextmanager` for async context managers
+
+## 🚀 FastAPI Best Practices
+
+### **MANDATORY: FastAPI Structure**
+
+- **ALWAYS** use Pydantic v2 models with `BaseModel`
+- **ALWAYS** use `Field()` for validation and documentation
+- **ALWAYS** use `Depends()` for dependency injection
+- **ALWAYS** use proper HTTP status codes
+- **ALWAYS** use `response_model` for API documentation
+
+### **MANDATORY: Error Handling**
+
+- **ALWAYS** use specific HTTPException with proper status codes
+- **ALWAYS** use custom exception handlers
+- **ALWAYS** log errors with structured logging
+- **NEVER** expose internal errors to clients
+
+### **MANDATORY: Security**
+
+- **ALWAYS** validate all input data
+- **ALWAYS** use proper authentication and authorization
+- **ALWAYS** sanitize user inputs
+- **ALWAYS** use HTTPS in production
+- **NEVER** expose sensitive information in logs
+
+## 📝 Code Quality
+
+### **MANDATORY: Code Style**
+
+- **ALWAYS** follow PEP 8 style guidelines
+- **ALWAYS** use meaningful variable and function names
+- **ALWAYS** write docstrings for all public functions
+- **ALWAYS** use type hints for all function parameters and return types
+- **NEVER** use single-letter variable names (except for loop counters)
+
+### **MANDATORY: Performance**
+
+- **ALWAYS** use async/await for I/O operations
+- **ALWAYS** use connection pooling for databases
+- **ALWAYS** implement proper caching strategies
+- **ALWAYS** use background tasks for long-running operations
+- **NEVER** block the event loop with synchronous operations
+
+### **MANDATORY: Testing**
+
+- **ALWAYS** write unit tests for all business logic
+- **ALWAYS** use pytest for testing
+- **ALWAYS** mock external dependencies
+- **ALWAYS** test both success and failure scenarios
+- **ALWAYS** aim for >90% code coverage
+
+## 🔧 FastAPI Specific Rules
+
+### **API Design**
+
+- Use RESTful API design principles
+- Use proper HTTP methods (GET, POST, PUT, DELETE)
+- Use meaningful endpoint names
+- Use proper HTTP status codes
+- Use consistent response formats
+
+### **Data Validation**
+
+- Use Pydantic models for request/response validation
+- Use Field() for detailed validation rules
+- Use custom validators when needed
+- Validate all input data before processing
+
+### **Error Handling**
+
+- Use HTTPException for API errors
+- Use custom exception handlers
+- Log all errors with proper context
+- Return consistent error response format
+
+### **Documentation**
+
+- Use docstrings for all endpoints
+- Use response_model for automatic documentation
+- Use tags for endpoint grouping
+- Use examples in Pydantic models
+
+## 🚫 Prohibited Patterns
+
+### **NEVER USE:**
+
+- `typing.List`, `typing.Dict`, `typing.Union` (use built-in types)
+- `Union[Type1, Type2]` (use `Type1 | Type2`)
+- `Optional[Type]` (use `Type | None`)
+- Synchronous I/O in async functions
+- Global variables for state management
+- Hardcoded secrets or credentials
+- Bare `except:` clauses
+- `print()` for logging (use proper logging)
+
+### **ANTI-PATTERNS:**
+
+- String concatenation in loops
+- Loading entire files into memory unnecessarily
+- Creating large intermediate lists
+- Using synchronous calls in async functions
+- Not handling exceptions properly
+
+## 📋 Code Review Checklist
+
+### **Before Every Commit:**
+
+- [ ] All functions have type hints
+- [ ] All public functions have docstrings
+- [ ] Code follows PEP 8
+- [ ] No bare `except:` clauses
+- [ ] All imports are organized correctly
+- [ ] No hardcoded secrets
+- [ ] Proper error handling
+- [ ] Unit tests cover new functionality
+- [ ] Performance is optimized
+- [ ] Security best practices followed
+
+## 🎯 Performance Targets
+
+### **Response Time Requirements:**
+
+- API endpoints: < 200ms for 95th percentile
+- Database queries: < 100ms for simple queries
+- File I/O operations: < 50ms for files < 1MB
+- Memory usage: < 100MB for typical operations
+
+### **Scalability Requirements:**
+
+- Support 1000+ concurrent users
+- Handle 10,000+ requests per minute
+- Process files up to 1GB efficiently
+- Maintain < 1% error rate under load
+
+## 🔍 Monitoring and Logging
+
+### **Logging Requirements:**
+
+- Use structured logging (JSON format)
+- Log all API requests and responses
+- Log all errors with stack traces
+- Log performance metrics
+- Use appropriate log levels
+
+### **Monitoring Requirements:**
+
+- Monitor response times
+- Monitor error rates
+- Monitor resource usage
+- Monitor business metrics
+- Set up alerts for critical issues
+
+## 🚀 Deployment
+
+### **Production Requirements:**
+
+- Use Docker for containerization
+- Use environment variables for configuration
+- Use proper secrets management
+- Use HTTPS with valid certificates
+- Use proper logging and monitoring
+- Use health checks
+- Use graceful shutdown
+- Use proper error handling
+
+### **Security Requirements:**
+
+- Use proper authentication
+- Use proper authorization
+- Use input validation
+- Use output encoding
+- Use secure headers
+- Use rate limiting
+- Use CORS properly
+- Use secure cookies

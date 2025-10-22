@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FastAPI 고급 기능 및 실용적 예제
 ================================
@@ -19,7 +20,7 @@ FastAPI 고급 기능 및 실용적 예제
 import asyncio
 import logging
 import time
-from typing import List, Optional, Dict, Any, Callable, Annotated
+from typing import Optional, Callable, Annotated
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 import json
@@ -298,8 +299,8 @@ class ConnectionManager:
     """웹소켓 연결 관리자"""
 
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.user_connections: Dict[int, List[WebSocket]] = {}
+        self.active_connections: list[WebSocket] = []
+        self.user_connections: dict[int, list[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: Optional[int] = None):
         """웹소켓 연결"""
@@ -425,6 +426,23 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.example.com"]
 )
+
+# UTF-8 인코딩 미들웨어 추가
+from fastapi import Request
+from fastapi.responses import Response
+
+
+@app.middleware("http")
+async def add_utf8_encoding(request: Request, call_next):
+    """UTF-8 인코딩 헤더 추가"""
+    response = await call_next(request)
+    if "content-type" not in response.headers:
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    elif "charset" not in response.headers.get("content-type", ""):
+        content_type = response.headers.get("content-type", "")
+        if "application/json" in content_type:
+            response.headers["content-type"] = f"{content_type}; charset=utf-8"
+    return response
 
 
 # ============================================================================
@@ -620,39 +638,40 @@ async def websocket_endpoint(websocket: WebSocket):
                 message_data = json.loads(data)
                 message = WebSocketMessage(**message_data)
 
-                # 메시지 타입에 따른 처리
-                if message.type == "ping":
-                    await manager.send_personal_message(
-                        json.dumps(
-                            {
-                                "type": "pong",
-                                "content": "pong",
-                                "timestamp": datetime.now().isoformat(),
-                            }
-                        ),
-                        websocket,
-                    )
-                elif message.type == "broadcast":
-                    await manager.broadcast(
-                        json.dumps(
-                            {
-                                "type": "broadcast",
-                                "content": message.content,
-                                "timestamp": datetime.now().isoformat(),
-                            }
+                # 메시지 타입에 따른 처리 (Python 3.10 match-case 사용)
+                match message.type:
+                    case "ping":
+                        await manager.send_personal_message(
+                            json.dumps(
+                                {
+                                    "type": "pong",
+                                    "content": "pong",
+                                    "timestamp": datetime.now().isoformat(),
+                                }
+                            ),
+                            websocket,
                         )
-                    )
-                else:
-                    await manager.send_personal_message(
-                        json.dumps(
-                            {
-                                "type": "echo",
-                                "content": f"Echo: {message.content}",
-                                "timestamp": datetime.now().isoformat(),
-                            }
-                        ),
-                        websocket,
-                    )
+                    case "broadcast":
+                        await manager.broadcast(
+                            json.dumps(
+                                {
+                                    "type": "broadcast",
+                                    "content": message.content,
+                                    "timestamp": datetime.now().isoformat(),
+                                }
+                            )
+                        )
+                    case _:
+                        await manager.send_personal_message(
+                            json.dumps(
+                                {
+                                    "type": "echo",
+                                    "content": f"Echo: {message.content}",
+                                    "timestamp": datetime.now().isoformat(),
+                                }
+                            ),
+                            websocket,
+                        )
 
             except json.JSONDecodeError:
                 await manager.send_personal_message(

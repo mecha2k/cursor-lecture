@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FastAPI 인증 및 보안
 ==================
@@ -500,6 +501,24 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware, calls_per_minute=100)
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key-change-in-production")
+
+# UTF-8 인코딩 미들웨어 추가
+from fastapi import Request
+from fastapi.responses import Response
+
+
+@app.middleware("http")
+async def add_utf8_encoding(request: Request, call_next):
+    """UTF-8 인코딩 헤더 추가"""
+    response = await call_next(request)
+    if "content-type" not in response.headers:
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    elif "charset" not in response.headers.get("content-type", ""):
+        content_type = response.headers.get("content-type", "")
+        if "application/json" in content_type:
+            response.headers["content-type"] = f"{content_type}; charset=utf-8"
+    return response
+
 
 # CORS 설정
 app.add_middleware(

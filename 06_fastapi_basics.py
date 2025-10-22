@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FastAPI 기초부터 고급까지
 ========================
@@ -21,7 +22,7 @@ FastAPI란?
 - 직관적인 API 설계
 """
 
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 from enum import Enum
 import asyncio
@@ -66,6 +67,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# UTF-8 인코딩 미들웨어 추가
+from fastapi import Request
+from fastapi.responses import Response
+
+
+@app.middleware("http")
+async def add_utf8_encoding(request: Request, call_next):
+    """UTF-8 인코딩 헤더 추가"""
+    response = await call_next(request)
+    if "content-type" not in response.headers:
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    elif "charset" not in response.headers.get("content-type", ""):
+        content_type = response.headers.get("content-type", "")
+        if "application/json" in content_type:
+            response.headers["content-type"] = f"{content_type}; charset=utf-8"
+    return response
 
 
 # ============================================================================
@@ -491,30 +509,47 @@ async def get_user_items(
     return paginated_items
 
 
-@app.get("/search", response_model=List[Union[UserResponse, ItemResponse]])
+@app.get("/search", response_model=List[UserResponse | ItemResponse])
 async def search(
     q: str = Query(..., min_length=1, description="검색어"),
     type: str = Query("all", regex="^(all|users|items)$", description="검색 타입"),
 ):
-    """통합 검색"""
+    """통합 검색 (Python 3.10 match-case 사용)"""
     results = []
 
-    if type in ["all", "users"]:
-        # 사용자 검색
-        for user in users_db.values():
-            if q.lower() in user.name.lower() or q.lower() in user.email.lower():
-                results.append(user)
-
-    if type in ["all", "items"]:
-        # 아이템 검색
-        for item in items_db.values():
-            if (
-                q.lower() in item.name.lower()
-                or q.lower() in item.description.lower()
-                or q.lower() in item.category.lower()
-                or any(q.lower() in tag.lower() for tag in item.tags)
-            ):
-                results.append(item)
+    # Python 3.10 match-case 문법 사용
+    match type:
+        case "users":
+            # 사용자 검색
+            for user in users_db.values():
+                if q.lower() in user.name.lower() or q.lower() in user.email.lower():
+                    results.append(user)
+        case "items":
+            # 아이템 검색
+            for item in items_db.values():
+                if (
+                    q.lower() in item.name.lower()
+                    or q.lower() in item.description.lower()
+                    or q.lower() in item.category.lower()
+                    or any(q.lower() in tag.lower() for tag in item.tags)
+                ):
+                    results.append(item)
+        case "all":
+            # 전체 검색
+            for user in users_db.values():
+                if q.lower() in user.name.lower() or q.lower() in user.email.lower():
+                    results.append(user)
+            for item in items_db.values():
+                if (
+                    q.lower() in item.name.lower()
+                    or q.lower() in item.description.lower()
+                    or q.lower() in item.category.lower()
+                    or any(q.lower() in tag.lower() for tag in item.tags)
+                ):
+                    results.append(item)
+        case _:
+            # 기본값 처리
+            results = []
 
     return results
 
@@ -636,6 +671,7 @@ async def value_error_handler(request, exc):
             "detail": str(exc),
             "status": "error",
         },
+        headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
 
@@ -645,6 +681,7 @@ async def not_found_handler(request, exc):
     return JSONResponse(
         status_code=404,
         content={"message": "요청한 리소스를 찾을 수 없습니다.", "status": "error"},
+        headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
 

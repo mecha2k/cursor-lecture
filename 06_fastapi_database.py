@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FastAPI와 데이터베이스 연동
 ========================
@@ -23,7 +24,7 @@ FastAPI와 데이터베이스 연동
 
 import asyncio
 import logging
-from typing import List, Optional, Dict, Any, Union
+from typing import Optional
 from datetime import datetime, date
 from contextlib import asynccontextmanager
 import json
@@ -749,6 +750,23 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# UTF-8 인코딩 미들웨어 추가
+from fastapi import Request
+from fastapi.responses import Response
+
+
+@app.middleware("http")
+async def add_utf8_encoding(request: Request, call_next):
+    """UTF-8 인코딩 헤더 추가"""
+    response = await call_next(request)
+    if "content-type" not in response.headers:
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    elif "charset" not in response.headers.get("content-type", ""):
+        content_type = response.headers.get("content-type", "")
+        if "application/json" in content_type:
+            response.headers["content-type"] = f"{content_type}; charset=utf-8"
+    return response
 
 
 # ============================================================================
