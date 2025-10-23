@@ -27,6 +27,7 @@ from datetime import datetime, date
 from enum import Enum
 import asyncio
 import json
+from contextlib import asynccontextmanager
 from fastapi import (
     FastAPI,
     HTTPException,
@@ -42,13 +43,29 @@ from fastapi import (
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field, validator, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr
 import uvicorn
 
 
 # ============================================================================
 # 1. 기본 FastAPI 애플리케이션
 # ============================================================================
+
+
+# Lifespan 이벤트 핸들러 (app 생성 전에 정의)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """애플리케이션 시작/종료 이벤트 처리 (FastAPI 최신 방식)"""
+    # Startup
+    print("🚀 FastAPI 애플리케이션이 시작되었습니다!")
+    create_initial_data()
+    print("📊 초기 데이터가 생성되었습니다.")
+
+    yield
+
+    # Shutdown
+    print("🛑 FastAPI 애플리케이션이 종료되었습니다.")
+
 
 # FastAPI 인스턴스 생성
 app = FastAPI(
@@ -57,6 +74,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",  # Swagger UI 경로
     redoc_url="/redoc",  # ReDoc 경로
+    lifespan=lifespan,  # Lifespan 이벤트 핸들러
 )
 
 # CORS 미들웨어 추가 (크로스 오리진 요청 허용)
@@ -114,7 +132,8 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, description="비밀번호")
     role: UserRole = Field(UserRole.USER, description="사용자 역할")
 
-    @validator("password")
+    @field_validator("password")
+    @classmethod
     def validate_password(cls, v):
         """비밀번호 검증"""
         if len(v) < 8:
@@ -148,7 +167,7 @@ class UserResponse(UserBase):
     class Config:
         """Pydantic 설정"""
 
-        orm_mode = True  # ORM 모델과 호환
+        from_attributes = True  # ORM 모델과 호환 (Pydantic V2)
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
@@ -187,7 +206,7 @@ class ItemResponse(ItemBase):
     is_available: bool = Field(True, description="사용 가능 여부")
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # ORM 모델과 호환 (Pydantic V2)
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
@@ -512,7 +531,7 @@ async def get_user_items(
 @app.get("/search", response_model=List[UserResponse | ItemResponse])
 async def search(
     q: str = Query(..., min_length=1, description="검색어"),
-    type: str = Query("all", regex="^(all|users|items)$", description="검색 타입"),
+    type: str = Query("all", pattern="^(all|users|items)$", description="검색 타입"),
 ):
     """통합 검색 (Python 3.10 match-case 사용)"""
     results = []
@@ -686,22 +705,9 @@ async def not_found_handler(request, exc):
 
 
 # ============================================================================
-# 12. 애플리케이션 시작/종료 이벤트
+# 12. 애플리케이션 시작/종료 이벤트 (Lifespan)
 # ============================================================================
-
-
-@app.on_event("startup")
-async def startup_event():
-    """애플리케이션 시작 시 실행"""
-    print("🚀 FastAPI 애플리케이션이 시작되었습니다!")
-    create_initial_data()
-    print("📊 초기 데이터가 생성되었습니다.")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """애플리케이션 종료 시 실행"""
-    print("🛑 FastAPI 애플리케이션이 종료되었습니다.")
+# Lifespan 이벤트 핸들러는 위에서 정의됨
 
 
 # ============================================================================
