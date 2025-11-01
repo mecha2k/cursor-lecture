@@ -44,9 +44,9 @@ def print_cancel_flow_diagram():
                           │
                           ▼
     ┌─────────────────────────────────────────────────────────────────┐
-    │  [WAIT] await server_task (취소 완료 대기)                      │
+    │  [WAIT] await server_task (취소 완료 대기)                         │
     │  ┌─────────────────────────────────────────────────────────────┐ │
-    │  │  서버 내부에서:                                             │ │
+    │  │  서버 내부에서:                                                │
     │  │  await asyncio.Future() ← CancelledError 발생!             │ │
     │  │  ↓                                                        │ │
     │  │  except asyncio.CancelledError:                           │ │
