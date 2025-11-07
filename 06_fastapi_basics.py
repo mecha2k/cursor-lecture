@@ -291,6 +291,20 @@ async def health_check():
     )
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    """파비콘 엔드포인트 (브라우저 404 방지)"""
+    # 간단한 FastAPI 로고 SVG 반환
+    svg_content = """
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="#009688"/>
+        <text x="50" y="70" font-size="60" font-weight="bold"
+              text-anchor="middle" fill="white" font-family="Arial">F</text>
+    </svg>
+    """
+    return Response(content=svg_content.strip(), media_type="image/svg+xml")
+
+
 # ============================================================================
 # 5. 사용자 관련 API
 # ============================================================================
