@@ -43,7 +43,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field, field_validator, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
 import uvicorn
 
 
@@ -164,11 +164,10 @@ class UserResponse(UserBase):
     created_at: datetime = Field(..., description="생성 시간")
     updated_at: Optional[datetime] = Field(None, description="수정 시간")
 
-    class Config:
-        """Pydantic 설정"""
-
-        from_attributes = True  # ORM 모델과 호환 (Pydantic V2)
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(
+        from_attributes=True,  # ORM 모델과 호환 (Pydantic V2)
+        json_encoders={datetime: lambda v: v.isoformat()},
+    )
 
 
 class ItemBase(BaseModel):
@@ -205,9 +204,10 @@ class ItemResponse(ItemBase):
     created_at: datetime = Field(..., description="생성 시간")
     is_available: bool = Field(True, description="사용 가능 여부")
 
-    class Config:
-        from_attributes = True  # ORM 모델과 호환 (Pydantic V2)
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(
+        from_attributes=True,  # ORM 모델과 호환 (Pydantic V2)
+        json_encoders={datetime: lambda v: v.isoformat()},
+    )
 
 
 class MessageResponse(BaseModel):
@@ -384,7 +384,7 @@ async def update_user(
     existing_user = users_db[user_id]
 
     # 업데이트할 필드만 적용
-    update_data = user_update.dict(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
         setattr(existing_user, field, value)
@@ -496,7 +496,7 @@ async def update_item(
     existing_item = items_db[item_id]
 
     # 업데이트할 필드만 적용
-    update_data = item_update.dict(exclude_unset=True)
+    update_data = item_update.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
         setattr(existing_item, field, value)

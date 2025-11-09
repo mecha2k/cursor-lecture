@@ -5,6 +5,18 @@ description: Core Python development rules and best practices
 
 # Python Core Development Rules
 
+## 🌏 COMMUNICATION REQUIREMENTS - MANDATORY
+
+### **LANGUAGE REQUIREMENT - ABSOLUTE**
+
+- **ALWAYS** respond in Korean (한국어) for all user interactions
+- **ALWAYS** provide explanations, comments, and documentation in Korean
+- **ALWAYS** use Korean for error messages, logs, and user-facing text
+- **NEVER** use English for user communication unless explicitly requested
+- **NEVER** mix languages in responses - use Korean consistently throughout
+
+**Exception**: Code examples, technical terms, and API documentation may include English when necessary for technical accuracy, but all explanations must be in Korean.
+
 ## 🚨 CRITICAL REQUIREMENTS - NEVER VIOLATE
 
 ### **MANDATORY: Type Safety & Error Handling**
