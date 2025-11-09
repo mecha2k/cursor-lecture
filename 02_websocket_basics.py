@@ -14,43 +14,13 @@ from datetime import datetime
 import websockets
 from websockets.exceptions import ConnectionClosed
 
-# Windows 터미널 인코딩 문제 해결
-if sys.platform == "win32":
-    # UTF-8 인코딩 강제 설정
-    os.environ["PYTHONIOENCODING"] = "utf-8"
-    # stdout/stderr를 UTF-8로 재설정
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8")
 
 # 로깅 설정 (UTF-8 인코딩 지원)
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(message)s",
-    handlers=[
-        logging.StreamHandler(
-            stream=sys.stdout
-            if hasattr(sys.stdout, "reconfigure")
-            else sys.stdout
-        )
-    ],
 )
 logger = logging.getLogger(__name__)
-
-
-def safe_print(message: str) -> None:
-    """
-    안전한 출력 함수 (인코딩 오류 방지)
-
-    Windows 터미널에서 UTF-8 문자 출력 시 발생할 수 있는
-    UnicodeEncodeError를 방지합니다.
-    """
-    try:
-        print(message)
-    except UnicodeEncodeError:
-        # 인코딩 실패 시 ASCII로 변환하여 출력
-        print(message.encode("ascii", errors="replace").decode("ascii"))
 
 
 class WebSocketServer:
@@ -105,13 +75,18 @@ class WebSocketServer:
                 try:
                     await self.process_message(websocket, message)
                 except Exception as e:
-                    logger.error(f"❌ 메시지 처리 중 오류 (클라이언트: {client_addr}): {e}")
+                    logger.error(
+                        f"❌ 메시지 처리 중 오류 (클라이언트: {client_addr}): {e}"
+                    )
                     # 메시지 처리 오류가 전체 연결을 끊지 않도록 함
         except ConnectionClosed:
             logger.info(f"클라이언트 연결 정상 종료: {client_addr}")
         except Exception as e:
-            logger.error(f"❌ 클라이언트 처리 중 심각한 오류 (클라이언트: {client_addr}): {e}")
+            logger.error(
+                f"❌ 클라이언트 처리 중 심각한 오류 (클라이언트: {client_addr}): {e}"
+            )
             import traceback
+
             logger.error(traceback.format_exc())
         finally:
             await self.unregister_client(websocket)
@@ -133,7 +108,7 @@ class WebSocketServer:
                     "timestamp": datetime.now().isoformat(),
                     "server_message_count": self.message_count,
                 }
-                await websocket.send(json.dumps(response))
+                await websocket.send(json.dumps(response, ensure_ascii=False))
 
             elif message_type == "broadcast":
                 # 브로드캐스트 메시지
@@ -143,7 +118,9 @@ class WebSocketServer:
                     "sender": str(websocket.remote_address),
                     "timestamp": datetime.now().isoformat(),
                 }
-                await self.broadcast_message(json.dumps(broadcast_data), websocket)
+                await self.broadcast_message(
+                    json.dumps(broadcast_data, ensure_ascii=False), websocket
+                )
 
             elif message_type == "ping":
                 # 핑 메시지
@@ -151,7 +128,7 @@ class WebSocketServer:
                     "type": "pong",
                     "timestamp": datetime.now().isoformat(),
                 }
-                await websocket.send(json.dumps(pong_response))
+                await websocket.send(json.dumps(pong_response, ensure_ascii=False))
 
             else:
                 # 알 수 없는 메시지 타입
@@ -160,7 +137,7 @@ class WebSocketServer:
                     "message": f"알 수 없는 메시지 타입: {message_type}",
                     "timestamp": datetime.now().isoformat(),
                 }
-                await websocket.send(json.dumps(error_response))
+                await websocket.send(json.dumps(error_response, ensure_ascii=False))
 
         except json.JSONDecodeError:
             # JSON이 아닌 일반 텍스트 메시지
@@ -185,7 +162,9 @@ class WebSocketServer:
                 ping_timeout=10,  # 10초 내 핑 응답 없으면 연결 종료
                 close_timeout=10,  # 연결 종료 타임아웃
             ):
-                logger.info(f"✅ 서버가 성공적으로 시작됨: ws://{self.host}:{self.port}")
+                logger.info(
+                    f"✅ 서버가 성공적으로 시작됨: ws://{self.host}:{self.port}"
+                )
                 self.ready.set()  # 서버 준비 완료 신호
                 await asyncio.Future()  # 서버를 계속 실행
         except Exception as e:
@@ -233,11 +212,18 @@ class WebSocketClient:
             raise RuntimeError("서버에 연결되지 않았습니다")
 
         await self.websocket.send(message)
-        logger.info(f"메시지 전송: {message}")
+        # JSON 문자열인 경우 예쁘게 포맷팅하여 로그 출력
+        try:
+            data = json.loads(message)
+            logger.info(
+                f"메시지 전송: {json.dumps(data, ensure_ascii=False, indent=2)}"
+            )
+        except (json.JSONDecodeError, TypeError):
+            logger.info(f"메시지 전송: {message}")
 
     async def send_json(self, data: dict) -> None:
         """JSON 메시지 전송"""
-        message = json.dumps(data)
+        message = json.dumps(data, ensure_ascii=False)
         await self.send_message(message)
 
     async def receive_message(self) -> str:
@@ -246,7 +232,14 @@ class WebSocketClient:
             raise RuntimeError("서버에 연결되지 않았습니다")
 
         message = await self.websocket.recv()
-        logger.info(f"메시지 수신: {message}")
+        # JSON 문자열인 경우 예쁘게 포맷팅하여 로그 출력
+        try:
+            data = json.loads(message)
+            logger.info(
+                f"메시지 수신: {json.dumps(data, ensure_ascii=False, indent=2)}"
+            )
+        except (json.JSONDecodeError, TypeError):
+            logger.info(f"메시지 수신: {message}")
         return message
 
     async def listen_for_messages(self) -> None:
@@ -256,7 +249,14 @@ class WebSocketClient:
 
         try:
             async for message in self.websocket:
-                logger.info(f"수신된 메시지: {message}")
+                # JSON 문자열인 경우 예쁘게 포맷팅하여 로그 출력
+                try:
+                    data = json.loads(message)
+                    logger.info(
+                        f"수신된 메시지: {json.dumps(data, ensure_ascii=False, indent=2)}"
+                    )
+                except (json.JSONDecodeError, TypeError):
+                    logger.info(f"수신된 메시지: {message}")
         except ConnectionClosed:
             logger.info("서버 연결이 종료되었습니다")
         except Exception as e:
@@ -298,7 +298,7 @@ async def demo_client_interactions():
         for i in range(4):
             try:
                 response = await asyncio.wait_for(client.receive_message(), timeout=2.0)
-                safe_print(f"   응답 {i+1}: {response}")
+                print(f"   응답 {i+1}: {response}")
             except asyncio.TimeoutError:
                 logger.warning(f"⏱️  응답 {i+1} 타임아웃")
                 break
@@ -308,6 +308,7 @@ async def demo_client_interactions():
     except Exception as e:
         logger.error(f"❌ 클라이언트 데모 오류: {e}")
         import traceback
+
         logger.error(traceback.format_exc())
         raise
     finally:
@@ -344,7 +345,7 @@ async def demo_multiple_clients():
         for idx, client in enumerate(clients, 1):
             try:
                 response = await asyncio.wait_for(client.receive_message(), timeout=1.0)
-                safe_print(f"   클라이언트 {idx} 응답: {response}")
+                print(f"   클라이언트 {idx} 응답: {response}")
             except asyncio.TimeoutError:
                 logger.warning(f"⏱️  클라이언트 {idx} 응답 타임아웃")
 
@@ -353,6 +354,7 @@ async def demo_multiple_clients():
     except Exception as e:
         logger.error(f"❌ 다중 클라이언트 데모 오류: {e}")
         import traceback
+
         logger.error(traceback.format_exc())
         raise
     finally:
@@ -364,7 +366,7 @@ async def demo_multiple_clients():
 
 async def main():
     """메인 함수"""
-    safe_print("웹소켓 기초 학습을 시작합니다...\n")
+    print("웹소켓 기초 학습을 시작합니다...\n")
 
     # 서버 시작 (백그라운드)
     server = WebSocketServer()
@@ -393,30 +395,30 @@ async def main():
             return False
         return True
 
-    safe_print("\n=== 단일 클라이언트 데모 ===")
+    print("\n=== 단일 클라이언트 데모 ===")
     if not check_server_status():
         return
     await demo_client_interactions()
 
-    safe_print("\n=== 여러 클라이언트 데모 ===")
+    print("\n=== 여러 클라이언트 데모 ===")
     if not check_server_status():
         return
     await demo_multiple_clients()
 
-    safe_print("\n[OK] 클라이언트 테스트 완료")
+    print("\n[OK] 클라이언트 테스트 완료")
 
     # 서버 정상 종료
-    safe_print("[STOP] 서버 종료 시작")
+    print("[STOP] 서버 종료 시작")
     server_task.cancel()
 
     try:
         await server_task  # ← 이 부분이 중요!
-        safe_print("[OK] 서버 종료 완료")
+        print("[OK] 서버 종료 완료")
     except asyncio.CancelledError:
-        safe_print("[OK] 서버가 정상적으로 종료됨")
+        print("[OK] 서버가 정상적으로 종료됨")
 
-    safe_print("[DONE] 프로그램 종료")
-    safe_print("\n웹소켓 기초 학습이 완료되었습니다!")
+    print("[DONE] 프로그램 종료")
+    print("\n웹소켓 기초 학습이 완료되었습니다!")
 
 
 if __name__ == "__main__":
