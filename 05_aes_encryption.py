@@ -24,9 +24,15 @@ import base64
 import hashlib
 import secrets
 from typing import Tuple, Optional, Union
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers import (
+    Cipher,
+    algorithms,
+    modes,
+)
 from cryptography.hazmat.primitives import hashes, padding
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.kdf.pbkdf2 import (
+    PBKDF2HMAC,
+)
 from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidKey, InvalidTag
 
@@ -117,7 +123,11 @@ class AESEncryption:
         padded_data += padder.finalize()
 
         # 암호화
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.CBC(iv),
+            backend=self.backend,
+        )
         encryptor = cipher.encryptor()
         ciphertext = encryptor.update(padded_data) + encryptor.finalize()
 
@@ -142,7 +152,11 @@ class AESEncryption:
             raise ValueError("IV 길이가 16바이트여야 합니다")
 
         # 복호화
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.CBC(iv),
+            backend=self.backend,
+        )
         decryptor = cipher.decryptor()
         padded_data = decryptor.update(ciphertext) + decryptor.finalize()
 
@@ -153,7 +167,9 @@ class AESEncryption:
 
         return data.decode("utf-8")
 
-    def encrypt_gcm(self, plaintext: str, key: bytes) -> Tuple[bytes, bytes, bytes]:
+    def encrypt_gcm(
+        self, plaintext: str, key: bytes
+    ) -> Tuple[bytes, bytes, bytes]:
         """
         GCM 모드로 AES 암호화 (인증 포함)
 
@@ -177,13 +193,25 @@ class AESEncryption:
         iv = secrets.token_bytes(12)  # GCM 권장 IV 길이
 
         # 암호화
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.GCM(iv),
+            backend=self.backend,
+        )
         encryptor = cipher.encryptor()
-        ciphertext = encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        ciphertext = (
+            encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        )
 
         return ciphertext, iv, encryptor.tag
 
-    def decrypt_gcm(self, ciphertext: bytes, key: bytes, iv: bytes, tag: bytes) -> str:
+    def decrypt_gcm(
+        self,
+        ciphertext: bytes,
+        key: bytes,
+        iv: bytes,
+        tag: bytes,
+    ) -> str:
         """
         GCM 모드로 AES 복호화 (인증 검증 포함)
 
@@ -206,17 +234,26 @@ class AESEncryption:
             raise ValueError("IV 길이가 12바이트여야 합니다")
 
         # 복호화
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.GCM(iv, tag),
+            backend=self.backend,
+        )
         decryptor = cipher.decryptor()
 
         try:
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
             return plaintext.decode("utf-8")
         except InvalidTag:
-            raise InvalidTag("인증 태그 검증 실패 - 데이터가 변조되었을 수 있습니다")
+            raise InvalidTag(
+                "인증 태그 검증 실패 - 데이터가 변조되었을 수 있습니다"
+            )
 
     def encrypt_with_aad(
-        self, plaintext: str, key: bytes, additional_data: str = ""
+        self,
+        plaintext: str,
+        key: bytes,
+        additional_data: str = "",
     ) -> Tuple[bytes, bytes, bytes]:
         """
         추가 인증 데이터(AAD)와 함께 GCM 암호화
@@ -234,14 +271,22 @@ class AESEncryption:
 
         iv = secrets.token_bytes(12)
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.GCM(iv),
+            backend=self.backend,
+        )
         encryptor = cipher.encryptor()
 
         # AAD 추가
         if additional_data:
-            encryptor.authenticate_additional_data(additional_data.encode("utf-8"))
+            encryptor.authenticate_additional_data(
+                additional_data.encode("utf-8")
+            )
 
-        ciphertext = encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        ciphertext = (
+            encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        )
 
         return ciphertext, iv, encryptor.tag
 
@@ -272,12 +317,18 @@ class AESEncryption:
         if len(iv) != 12:
             raise ValueError("IV 길이가 12바이트여야 합니다")
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key),
+            modes.GCM(iv, tag),
+            backend=self.backend,
+        )
         decryptor = cipher.decryptor()
 
         # AAD 추가
         if additional_data:
-            decryptor.authenticate_additional_data(additional_data.encode("utf-8"))
+            decryptor.authenticate_additional_data(
+                additional_data.encode("utf-8")
+            )
 
         try:
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
@@ -286,6 +337,7 @@ class AESEncryption:
             raise InvalidTag(
                 "인증 실패 - 데이터가 변조되었거나 AAD가 일치하지 않습니다"
             )
+
 
 # "107ade7f090d4ad398eeedb5b0b9a66b746942aaeda79bfbadd8532f5589f165"
 def demonstrate_basic_encryption():
@@ -394,7 +446,9 @@ def demonstrate_aad_encryption():
     print(f"잘못된 AAD: {wrong_metadata}")
 
     try:
-        decrypted_wrong = aes.decrypt_with_aad(ciphertext, key, iv, tag, wrong_metadata)
+        decrypted_wrong = aes.decrypt_with_aad(
+            ciphertext, key, iv, tag, wrong_metadata
+        )
         print(f"복호화 결과: {decrypted_wrong}")
     except InvalidTag as e:
         print(f"인증 실패: {e}")
@@ -431,7 +485,9 @@ def demonstrate_tamper_detection():
     print(f"변조된 암호문 (hex): {bytes(tampered_ciphertext).hex()}")
 
     try:
-        decrypted_tampered = aes.decrypt_gcm(bytes(tampered_ciphertext), key, iv, tag)
+        decrypted_tampered = aes.decrypt_gcm(
+            bytes(tampered_ciphertext), key, iv, tag
+        )
         print(f"복호화 결과: {decrypted_tampered}")
     except InvalidTag as e:
         print(f"변조 탐지됨: {e}")

@@ -363,15 +363,21 @@ class ChatServer:
         heartbeat_task = asyncio.create_task(self.heartbeat_monitor())
 
         try:
+            # 핸들러 래퍼 함수 생성 (self 바인딩을 위해 필요)
+            # websockets 라이브러리 버전에 따라 인자 개수가 다를 수 있음
+            async def handler(websocket: WebSocketServerProtocol, *args) -> None:
+                path = args[0] if args else ""
+                await self.handle_client(websocket, path)
+
             async with websockets.serve(
-                self.handle_client,
+                handler,
                 self.host,
                 self.port,
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
             ):
-                logger.info("채팅 서버가 실행 중입니다. Ctrl+C로 종료하세요.")
+                logger.info("채팅 서버가 실행 중입니다.")
                 await asyncio.Future()  # 서버를 계속 실행
         finally:
             heartbeat_task.cancel()
@@ -481,11 +487,10 @@ class ChatClient:
 
         try:
             while self.running:
-                # 사용자 입력 받기
+                # 사용자 입력 받기 (타임아웃 제거)
                 try:
-                    user_input = await asyncio.wait_for(
-                        asyncio.get_event_loop().run_in_executor(None, input),
-                        timeout=1.0,
+                    user_input = await asyncio.get_event_loop().run_in_executor(
+                        None, input
                     )
 
                     if user_input.strip():
@@ -500,10 +505,10 @@ class ChatClient:
                         else:
                             await self.send_message(user_input)
 
-                except asyncio.TimeoutError:
-                    # 타임아웃은 정상 (입력 대기 중)
-                    continue
                 except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    logger.error(f"입력 처리 중 오류: {e}")
                     break
 
         finally:
@@ -518,7 +523,40 @@ class ChatClient:
 async def demo_chat_server():
     """채팅 서버 데모"""
     server = ChatServer()
-    await server.start_server()
+
+    # 서버를 백그라운드 태스크로 실행
+    server_task = asyncio.create_task(server.start_server())
+
+    print("\n채팅 서버가 실행 중입니다.")
+    print("명령어: 'stop' 또는 'quit' 입력 시 서버 종료")
+    print("-" * 50)
+
+    try:
+        # 사용자 입력을 받아서 서버 종료
+        while True:
+            try:
+                user_input = await asyncio.get_event_loop().run_in_executor(None, input)
+
+                if user_input.strip().lower() in ["stop", "quit", "exit"]:
+                    print("서버 종료 중...")
+                    break
+                else:
+                    print("알 수 없는 명령어입니다. 'stop' 또는 'quit'를 입력하세요.")
+
+            except KeyboardInterrupt:
+                print("\n서버 종료 중...")
+                break
+            except Exception as e:
+                logger.error(f"입력 처리 중 오류: {e}")
+                break
+    finally:
+        # 서버 태스크 취소
+        server_task.cancel()
+        try:
+            await server_task
+        except asyncio.CancelledError:
+            pass
+        print("서버가 종료되었습니다.")
 
 
 async def demo_chat_client():

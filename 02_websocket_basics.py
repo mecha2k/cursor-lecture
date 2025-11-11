@@ -15,7 +15,6 @@ import websockets
 from websockets.exceptions import ConnectionClosed
 
 
-# 로깅 설정 (UTF-8 인코딩 지원)
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(message)s",
