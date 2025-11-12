@@ -123,11 +123,7 @@ class AESEncryption:
         padded_data += padder.finalize()
 
         # 암호화
-        cipher = Cipher(
-            algorithms.AES(key),
-            modes.CBC(iv),
-            backend=self.backend,
-        )
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=self.backend)
         encryptor = cipher.encryptor()
         ciphertext = encryptor.update(padded_data) + encryptor.finalize()
 
@@ -167,9 +163,7 @@ class AESEncryption:
 
         return data.decode("utf-8")
 
-    def encrypt_gcm(
-        self, plaintext: str, key: bytes
-    ) -> Tuple[bytes, bytes, bytes]:
+    def encrypt_gcm(self, plaintext: str, key: bytes) -> Tuple[bytes, bytes, bytes]:
         """
         GCM 모드로 AES 암호화 (인증 포함)
 
@@ -199,9 +193,7 @@ class AESEncryption:
             backend=self.backend,
         )
         encryptor = cipher.encryptor()
-        ciphertext = (
-            encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
-        )
+        ciphertext = encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
 
         return ciphertext, iv, encryptor.tag
 
@@ -245,9 +237,7 @@ class AESEncryption:
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
             return plaintext.decode("utf-8")
         except InvalidTag:
-            raise InvalidTag(
-                "인증 태그 검증 실패 - 데이터가 변조되었을 수 있습니다"
-            )
+            raise InvalidTag("인증 태그 검증 실패 - 데이터가 변조되었을 수 있습니다")
 
     def encrypt_with_aad(
         self,
@@ -280,13 +270,9 @@ class AESEncryption:
 
         # AAD 추가
         if additional_data:
-            encryptor.authenticate_additional_data(
-                additional_data.encode("utf-8")
-            )
+            encryptor.authenticate_additional_data(additional_data.encode("utf-8"))
 
-        ciphertext = (
-            encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
-        )
+        ciphertext = encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
 
         return ciphertext, iv, encryptor.tag
 
@@ -326,9 +312,7 @@ class AESEncryption:
 
         # AAD 추가
         if additional_data:
-            decryptor.authenticate_additional_data(
-                additional_data.encode("utf-8")
-            )
+            decryptor.authenticate_additional_data(additional_data.encode("utf-8"))
 
         try:
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
@@ -446,9 +430,7 @@ def demonstrate_aad_encryption():
     print(f"잘못된 AAD: {wrong_metadata}")
 
     try:
-        decrypted_wrong = aes.decrypt_with_aad(
-            ciphertext, key, iv, tag, wrong_metadata
-        )
+        decrypted_wrong = aes.decrypt_with_aad(ciphertext, key, iv, tag, wrong_metadata)
         print(f"복호화 결과: {decrypted_wrong}")
     except InvalidTag as e:
         print(f"인증 실패: {e}")
@@ -485,9 +467,7 @@ def demonstrate_tamper_detection():
     print(f"변조된 암호문 (hex): {bytes(tampered_ciphertext).hex()}")
 
     try:
-        decrypted_tampered = aes.decrypt_gcm(
-            bytes(tampered_ciphertext), key, iv, tag
-        )
+        decrypted_tampered = aes.decrypt_gcm(bytes(tampered_ciphertext), key, iv, tag)
         print(f"복호화 결과: {decrypted_tampered}")
     except InvalidTag as e:
         print(f"변조 탐지됨: {e}")

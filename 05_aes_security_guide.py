@@ -162,14 +162,20 @@ class SecureAESManager:
 
         iv = self.generate_secure_iv("GCM")
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key), modes.GCM(iv), backend=self.backend
+        )
         encryptor = cipher.encryptor()
 
         # AAD 추가
         if additional_data:
-            encryptor.authenticate_additional_data(additional_data.encode("utf-8"))
+            encryptor.authenticate_additional_data(
+                additional_data.encode("utf-8")
+            )
 
-        ciphertext = encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        ciphertext = (
+            encryptor.update(plaintext.encode("utf-8")) + encryptor.finalize()
+        )
 
         return ciphertext, iv, encryptor.tag
 
@@ -197,12 +203,16 @@ class SecureAESManager:
         if len(key) != self.key_bytes:
             raise ValueError(f"키 길이가 {self.key_bytes}바이트여야 합니다")
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=self.backend)
+        cipher = Cipher(
+            algorithms.AES(key), modes.GCM(iv, tag), backend=self.backend
+        )
         decryptor = cipher.decryptor()
 
         # AAD 추가
         if additional_data:
-            decryptor.authenticate_additional_data(additional_data.encode("utf-8"))
+            decryptor.authenticate_additional_data(
+                additional_data.encode("utf-8")
+            )
 
         try:
             plaintext = decryptor.update(ciphertext) + decryptor.finalize()
@@ -228,18 +238,22 @@ class SecureAESManager:
             raise ValueError(f"키 길이가 {self.key_bytes}바이트여야 합니다")
 
         encrypted_chunks = []
+        total_chunks = (len(data) + chunk_size - 1) // chunk_size  # 올림 계산
 
         for i in range(0, len(data), chunk_size):
             chunk = data[i : i + chunk_size]
+            chunk_index = i // chunk_size
 
             # 각 청크에 고유한 IV 생성
             iv = self.generate_secure_iv("GCM")
 
-            cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=self.backend)
+            cipher = Cipher(
+                algorithms.AES(key), modes.GCM(iv), backend=self.backend
+            )
             encryptor = cipher.encryptor()
 
-            # 청크 번호를 AAD로 사용
-            chunk_info = f"chunk:{i//chunk_size}:total:{len(data)}"
+            # 청크 번호를 AAD로 사용 (총 청크 수와 일치하도록)
+            chunk_info = f"chunk:{chunk_index}:total:{total_chunks}"
             encryptor.authenticate_additional_data(chunk_info.encode("utf-8"))
 
             ciphertext = encryptor.update(chunk) + encryptor.finalize()
@@ -264,6 +278,7 @@ class SecureAESManager:
             raise ValueError(f"키 길이가 {self.key_bytes}바이트여야 합니다")
 
         decrypted_data = b""
+        total_chunks = len(encrypted_chunks)
 
         for i, (ciphertext, iv, tag) in enumerate(encrypted_chunks):
             cipher = Cipher(
@@ -271,8 +286,8 @@ class SecureAESManager:
             )
             decryptor = cipher.decryptor()
 
-            # 청크 번호를 AAD로 사용
-            chunk_info = f"chunk:{i}:total:{len(encrypted_chunks)}"
+            # 청크 번호를 AAD로 사용 (암호화 시와 동일한 형식)
+            chunk_info = f"chunk:{i}:total:{total_chunks}"
             decryptor.authenticate_additional_data(chunk_info.encode("utf-8"))
 
             try:
@@ -356,7 +371,9 @@ def demonstrate_large_data_encryption():
 
     # 청크 단위로 암호화
     print("\n청크 단위로 암호화 중...")
-    encrypted_chunks = secure_aes.encrypt_large_data(large_data, key, chunk_size=1024)
+    encrypted_chunks = secure_aes.encrypt_large_data(
+        large_data, key, chunk_size=1024
+    )
     print(f"암호화된 청크 수: {len(encrypted_chunks)}")
 
     # 청크 단위로 복호화
@@ -444,7 +461,9 @@ def demonstrate_key_rotation():
 
     # 데이터를 현재 키로 암호화
     data = "중요한 데이터"
-    ciphertext, iv, tag = secure_aes.encrypt_with_authentication(data, current_key)
+    ciphertext, iv, tag = secure_aes.encrypt_with_authentication(
+        data, current_key
+    )
     print(f"현재 키로 암호화 완료")
 
     # 현재 키로 복호화 (정상)
@@ -458,7 +477,9 @@ def demonstrate_key_rotation():
 
     # 새 키로 복호화 시도 (실패해야 함)
     try:
-        decrypted = secure_aes.decrypt_with_authentication(ciphertext, new_key, iv, tag)
+        decrypted = secure_aes.decrypt_with_authentication(
+            ciphertext, new_key, iv, tag
+        )
         print(f"새 키로 복호화 성공: {data == decrypted}")
     except InvalidTag as e:
         print(f"새 키로 복호화 실패 (예상됨): {e}")
