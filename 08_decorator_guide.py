@@ -348,8 +348,8 @@ def demonstrate_field_validator():
     print("\n@field_validator 예제:")
     try:
         user = AdvancedUser(
-            username="  JohnDoe  ",  # 공백 포함, 대소문자 혼합
-            email="  JOHN@EXAMPLE.COM  ",  # 공백 포함, 대문자
+            username="JohnDoe",  # 공백 포함, 대소문자 혼합
+            email="  JOHN-EXAMPLE.COM  ",  # 공백 포함, 대문자
             age=25,
             phone="010-1234-5678",
         )
@@ -512,6 +512,17 @@ def demonstrate_custom_decorators():
 
         return wrapper
 
+    print("\n1. 실행 시간 측정 데코레이터:")
+
+    @timing_decorator
+    def slow_function(n: int) -> int:
+        """느린 함수"""
+        time.sleep(0.1)
+        return sum(range(n))
+
+    result = slow_function(1000)
+    print(f"결과: {result}")
+
     # 2. 재시도 데코레이터 팩토리
     def retry_decorator(max_retries: int = 3, delay: float = 1.0):
         """재시도 데코레이터 팩토리"""
@@ -533,6 +544,23 @@ def demonstrate_custom_decorators():
             return wrapper
 
         return decorator
+
+    print("\n2. 재시도 데코레이터:")
+
+    @retry_decorator(max_retries=3, delay=0.1)
+    def unreliable_function() -> int:
+        """불안정한 함수 (시뮬레이션)"""
+        import random
+
+        if random.random() < 0.7:
+            raise ValueError("임의의 오류 발생")
+        return 42
+
+    try:
+        result = unreliable_function()
+        print(f"성공: {result}")
+    except ValueError as e:
+        print(f"최종 실패: {e}")
 
     # 3. 로깅 데코레이터
     def log_decorator(func: Callable) -> Callable:
@@ -558,34 +586,6 @@ def demonstrate_custom_decorators():
         """캐싱된 함수"""
         print(f"계산 중: {n}")
         return sum(range(n))
-
-    print("\n1. 실행 시간 측정 데코레이터:")
-
-    @timing_decorator
-    def slow_function(n: int) -> int:
-        """느린 함수"""
-        time.sleep(0.1)
-        return sum(range(n))
-
-    result = slow_function(1000)
-    print(f"결과: {result}")
-
-    print("\n2. 재시도 데코레이터:")
-
-    @retry_decorator(max_retries=3, delay=0.1)
-    def unreliable_function() -> int:
-        """불안정한 함수 (시뮬레이션)"""
-        import random
-
-        if random.random() < 0.7:
-            raise ValueError("임의의 오류 발생")
-        return 42
-
-    try:
-        result = unreliable_function()
-        print(f"성공: {result}")
-    except ValueError as e:
-        print(f"최종 실패: {e}")
 
     print("\n3. 로깅 데코레이터:")
 
