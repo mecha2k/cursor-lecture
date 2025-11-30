@@ -50,11 +50,40 @@ except ImportError:
 # Matplotlib은 선택적 의존성
 try:
     import matplotlib.pyplot as plt  # type: ignore[import-untyped]
+    import matplotlib.font_manager as fm  # type: ignore[import-untyped]
 
     MATPLOTLIB_AVAILABLE = True
+
+    # 한글 폰트 설정 함수
+    def setup_korean_font() -> None:
+        """한글 폰트를 설정합니다."""
+        import platform
+
+        system = platform.system()
+        if system == "Windows":
+            # Windows: 맑은 고딕 사용
+            plt.rcParams["font.family"] = "Malgun Gothic"
+        elif system == "Darwin":  # macOS
+            # macOS: AppleGothic 사용
+            plt.rcParams["font.family"] = "AppleGothic"
+        else:  # Linux
+            # Linux: NanumGothic 또는 DejaVu Sans 사용
+            try:
+                plt.rcParams["font.family"] = "NanumGothic"
+            except Exception:
+                # NanumGothic이 없으면 DejaVu Sans 사용 (한글 미지원)
+                plt.rcParams["font.family"] = "DejaVu Sans"
+
+        # 음수 기호 깨짐 방지
+        plt.rcParams["axes.unicode_minus"] = False
+
+    # 한글 폰트 설정 적용
+    setup_korean_font()
+
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
     plt = None  # type: ignore[assignment]
+    fm = None  # type: ignore[assignment]
 
 
 # ============================================================================
@@ -93,10 +122,10 @@ def show_introduction():
     with col1:
         st.markdown(
             """
-            - ✅ **간단한 문법**: Python만 알면 됩니다
-            - ✅ **자동 리로딩**: 코드 변경 시 자동 새로고침
-            - ✅ **풍부한 위젯**: 버튼, 입력, 차트 등 다양한 컴포넌트
-            - ✅ **캐싱 지원**: 성능 최적화 내장
+            ✅ **간단한 문법**: Python만 알면 됩니다
+            ✅ **자동 리로딩**: 코드 변경 시 자동 새로고침
+            ✅ **풍부한 위젯**: 버튼, 입력, 차트 등 다양한 컴포넌트
+            ✅ **캐싱 지원**: 성능 최적화 내장
             """
         )
 
@@ -618,7 +647,7 @@ st.dataframe(df)
         }
     )
 
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width="stretch")
 
     st.markdown("---")
 
@@ -695,7 +724,7 @@ st.metric("매출", "1000만원", "10%")
     # 필터링
     filtered_df = df if selected_city == "전체" else df[df["도시"] == selected_city]
 
-    st.dataframe(filtered_df, use_container_width=True)
+    st.dataframe(filtered_df, width="stretch")
 
     # 통계
     col1, col2, col3 = st.columns(3)
@@ -806,12 +835,12 @@ st.plotly_chart(fig)
         fig_scatter = px.scatter(
             df_viz, x="나이", y="점수", color="도시", size="점수", hover_data=["도시"]
         )
-        st.plotly_chart(fig_scatter, use_container_width=True)
+        st.plotly_chart(fig_scatter, width="stretch")
 
         # 바 차트
         city_scores = df_viz.groupby("도시")["점수"].mean().reset_index()
         fig_bar = px.bar(city_scores, x="도시", y="점수", title="도시별 평균 점수")
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width="stretch")
 
     else:
         st.warning("Plotly가 설치되지 않았습니다. `pip install plotly`로 설치하세요.")
@@ -882,7 +911,7 @@ if uploaded_file:
         if file_type == "csv":
             df = pd.read_csv(uploaded_file)
             st.success(f"CSV 파일이 업로드되었습니다! ({len(df)}행)")
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df, width="stretch")
 
         elif file_type == "json":
             json_data = json.load(uploaded_file)
@@ -957,7 +986,7 @@ st.download_button("CSV 다운로드", csv, "data.csv", "text/csv")
             df = pd.read_csv(csv_file)
 
             st.subheader("데이터 미리보기")
-            st.dataframe(df.head(10), use_container_width=True)
+            st.dataframe(df.head(10), width="stretch")
 
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -968,12 +997,12 @@ st.download_button("CSV 다운로드", csv, "data.csv", "text/csv")
                 st.metric("결측값", df.isnull().sum().sum())
 
             st.subheader("데이터 타입")
-            st.dataframe(df.dtypes.to_frame("타입"), use_container_width=True)
+            st.dataframe(df.dtypes.to_frame("타입"), width="stretch")
 
             st.subheader("기본 통계")
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             if len(numeric_cols) > 0:
-                st.dataframe(df[numeric_cols].describe(), use_container_width=True)
+                st.dataframe(df[numeric_cols].describe(), width="stretch")
 
         except Exception as e:
             st.error(f"파일을 읽는 중 오류가 발생했습니다: {e}")
@@ -1391,7 +1420,7 @@ def show_practical_examples():
     if PLOTLY_AVAILABLE:
         st.subheader("Plotly 인터랙티브 차트")
         fig = px.line(chart_df, x="X", y="Y", title="인터랙티브 라인 차트")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 
 # ============================================================================
@@ -1407,7 +1436,7 @@ def main():
 
     menu_options = [
         "소개",
-        "텍스트 표시__",
+        "텍스트 표시",
         "입력 위젯",
         "레이아웃",
         "데이터 표시",
@@ -1445,7 +1474,7 @@ pip install matplotlib  # 선택적
     # 선택된 메뉴에 따라 해당 예제 실행
     if selected_menu == "소개":
         show_introduction()
-    elif selected_menu == "텍스트 표시1":
+    elif selected_menu == "텍스트 표시":
         show_text_widgets()
     elif selected_menu == "입력 위젯":
         show_input_widgets()

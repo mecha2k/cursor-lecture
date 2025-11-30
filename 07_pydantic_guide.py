@@ -47,11 +47,11 @@ from pydantic import (
     SecretBytes,
     ValidationError,
     ValidationInfo,
-    FieldValidationInfo,
 )
-from pydantic_settings import BaseSettings
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from pydantic_settings import BaseSettings  # type: ignore[import-untyped]
 
 
 # ============================================================================
